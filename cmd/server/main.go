@@ -63,6 +63,10 @@ func counterPage(w http.ResponseWriter, r *http.Request) {
 func run() error {
 
 	mux := http.NewServeMux()
+	mux.HandleFunc(`/`, func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	})
 	mux.HandleFunc(`/update/gauge/`, gaugePage)
 	mux.HandleFunc(`/update/counter/`, counterPage)
 	return http.ListenAndServe(`:8080`, mux)
