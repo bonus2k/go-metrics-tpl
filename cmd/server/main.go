@@ -65,7 +65,6 @@ func run() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc(`/update/`, func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusBadRequest)
-		return
 	})
 	mux.HandleFunc(`/update/gauge/`, gaugePage)
 	mux.HandleFunc(`/update/counter/`, counterPage)
