@@ -63,7 +63,7 @@ func counterPage(w http.ResponseWriter, r *http.Request) {
 func run() error {
 
 	mux := http.NewServeMux()
-	mux.HandleFunc(`/`, func(writer http.ResponseWriter, request *http.Request) {
+	mux.HandleFunc(`/update/`, func(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	})
