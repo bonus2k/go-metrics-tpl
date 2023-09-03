@@ -20,6 +20,7 @@ func SendToGauge(m map[string]string) {
 		req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
 		req.Header.Add("Content-Type", "text/plain")
 		res, err := client.Do(req)
+		defer res.Body.Close()
 		fmt.Println(res.Status, err)
 	}
 
@@ -33,6 +34,7 @@ func SendToCounter(name string, value int64) {
 	req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
 	req.Header.Add("Content-Type", "text/plain")
 	res, err := client.Do(req)
+	defer res.Body.Close()
 	fmt.Println(res.Status, err)
 }
 
