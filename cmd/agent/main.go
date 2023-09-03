@@ -11,14 +11,14 @@ var mapMetrics map[string]string
 func main() {
 	count := services.GetPollCount()
 	go func() {
-		for true {
+		for {
 			mapMetrics = services.GetMapMetrics()
 			time.Sleep(2 * time.Second)
 		}
 	}()
 
 	go func() {
-		for true {
+		for {
 			time.Sleep(10 * time.Second)
 			services.AddRandomValue(mapMetrics)
 			clients.SendToGauge(mapMetrics)
