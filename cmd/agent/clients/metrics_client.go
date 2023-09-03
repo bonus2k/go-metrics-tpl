@@ -19,9 +19,13 @@ func SendToGauge(m map[string]string) {
 		reqAddress := getAddressUpdateGauge(con, k, v)
 		req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
 		req.Header.Add("Content-Type", "text/plain")
-		res, err := client.Do(req)
-		defer res.Body.Close()
-		fmt.Println(res.Status, err)
+		if res, err := client.Do(req); err == nil {
+			defer res.Body.Close()
+			fmt.Println(res.Status, " ", k, "=", v)
+		} else {
+			fmt.Println(err)
+		}
+
 	}
 
 }
@@ -33,9 +37,12 @@ func SendToCounter(name string, value int64) {
 	reqAddress := getAddressUpdateCounter(con, name, value)
 	req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
 	req.Header.Add("Content-Type", "text/plain")
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	fmt.Println(res.Status, err)
+	if res, err := client.Do(req); err == nil {
+		defer res.Body.Close()
+		fmt.Println(res.Status, value)
+	} else {
+		fmt.Println(err)
+	}
 }
 
 func getAddressUpdateGauge(con connect, name string, value string) string {
