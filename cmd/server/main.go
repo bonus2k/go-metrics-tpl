@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var mem repository.MemStorageImpl
+var mem repository.MemStorage
 
 func main() {
 	mem = repository.NewMemStorage()

@@ -7,8 +7,8 @@ type MemStorageImpl struct {
 	counter map[string][]int64
 }
 
-func NewMemStorage() MemStorageImpl {
-	return MemStorageImpl{gauge: make(map[string]float64), counter: make(map[string][]int64)}
+func NewMemStorage() MemStorage {
+	return &MemStorageImpl{gauge: make(map[string]float64), counter: make(map[string][]int64)}
 }
 
 func (ms *MemStorageImpl) AddGauge(name string, value float64) {
