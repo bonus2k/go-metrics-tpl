@@ -14,6 +14,7 @@ type connect struct {
 func SendToGauge(m map[string]string) {
 	con := connect{"localhost", "8080", "http"}
 	client := http.DefaultClient
+	defer client.CloseIdleConnections()
 	for k, v := range m {
 		reqAddress := getAddressUpdateGauge(con, k, v)
 		req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
@@ -27,6 +28,7 @@ func SendToGauge(m map[string]string) {
 func SendToCounter(name string, value int64) {
 	con := connect{"localhost", "8080", "http"}
 	client := http.DefaultClient
+	defer client.CloseIdleConnections()
 	reqAddress := getAddressUpdateCounter(con, name, value)
 	req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
 	req.Header.Add("Content-Type", "text/plain")
