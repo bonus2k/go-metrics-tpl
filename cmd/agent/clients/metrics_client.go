@@ -22,9 +22,7 @@ func (con *Connect) SendToGauge(m map[string]string) ([]byte, error) {
 		if res, err := client.Do(req); err == nil {
 			defer res.Body.Close()
 			return io.ReadAll(res.Body)
-			fmt.Println(res.Status, " ", k, "=", v)
 		} else {
-			fmt.Println(err)
 			return nil, err
 		}
 	}
@@ -41,10 +39,8 @@ func (con *Connect) SendToCounter(name string, value int64) ([]byte, error) {
 	if res, err := client.Do(req); err == nil {
 		defer res.Body.Close()
 		return io.ReadAll(res.Body)
-		fmt.Println(res.Status, value)
 	} else {
 		return nil, err
-		fmt.Println(err)
 	}
 	return nil, nil
 }
