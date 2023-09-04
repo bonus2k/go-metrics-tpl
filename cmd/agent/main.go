@@ -10,6 +10,7 @@ var mapMetrics map[string]string
 
 func main() {
 	count := services.GetPollCount()
+	client := clients.Connect{Server: "localhost", Port: "8080", Protocol: "http"}
 	go func() {
 		for {
 			mapMetrics = services.GetMapMetrics()
@@ -21,8 +22,8 @@ func main() {
 		for {
 			time.Sleep(10 * time.Second)
 			services.AddRandomValue(mapMetrics)
-			clients.SendToGauge(mapMetrics)
-			clients.SendToCounter("PollCount", count())
+			client.SendToGauge(mapMetrics)
+			client.SendToCounter("PollCount", count())
 		}
 	}()
 	time.Sleep(100 * time.Hour)

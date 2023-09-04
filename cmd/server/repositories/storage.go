@@ -1,6 +1,8 @@
-package repository
+package repositories
 
 import "strings"
+
+var mem MemStorage
 
 type MemStorageImpl struct {
 	gauge   map[string]float64
@@ -8,7 +10,10 @@ type MemStorageImpl struct {
 }
 
 func NewMemStorage() MemStorage {
-	return &MemStorageImpl{gauge: make(map[string]float64), counter: make(map[string][]int64)}
+	if mem == nil {
+		mem = &MemStorageImpl{gauge: make(map[string]float64), counter: make(map[string][]int64)}
+	}
+	return mem
 }
 
 func (ms *MemStorageImpl) AddGauge(name string, value float64) {

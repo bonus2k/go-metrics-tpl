@@ -8,7 +8,7 @@ import (
 )
 
 var mem runtime.MemStats
-var MemStatConst = []string{
+var memStatConst = []string{
 	"Alloc",
 	"BuckHashSys",
 	"Frees",
@@ -42,7 +42,7 @@ func GetMapMetrics() map[string]string {
 	metrics := make(map[string]string)
 	runtime.ReadMemStats(&mem)
 	valuesMemStats := reflect.ValueOf(mem)
-	for _, s := range MemStatConst {
+	for _, s := range memStatConst {
 		value := valuesMemStats.FieldByName(s)
 		metrics[s] = fmt.Sprintf("%v", value.Interface())
 	}
