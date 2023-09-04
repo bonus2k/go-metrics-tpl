@@ -42,7 +42,6 @@ func (con *Connect) SendToCounter(name string, value int64) ([]byte, error) {
 	} else {
 		return nil, err
 	}
-	return nil, nil
 }
 
 func getAddressUpdateGauge(con *Connect, name string, value string) string {
