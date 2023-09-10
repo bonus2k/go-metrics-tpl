@@ -38,7 +38,7 @@ func TestCounterPage(t *testing.T) {
 			name:    "test counter page 404",
 			request: "/update/counter/",
 			method:  http.MethodPost,
-			want:    want{contentType: "text/plain; charset=utf-8", statusCode: 404},
+			want:    want{contentType: "", statusCode: 404},
 		},
 		{
 			name:    "test counter page 400",
@@ -87,7 +87,7 @@ func TestGaugePage(t *testing.T) {
 			name:    "test gauge page 404",
 			request: "/update/gauge/",
 			method:  http.MethodPost,
-			want:    want{contentType: "text/plain; charset=utf-8", statusCode: 404},
+			want:    want{contentType: "", statusCode: 404},
 		},
 		{
 			name:    "test gauge page 400",
