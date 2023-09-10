@@ -6,17 +6,8 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
+	err := http.ListenAndServe(`:8080`, controllers.MetricsRouter())
+	if err != nil {
 		panic(err)
 	}
-}
-
-func run() error {
-	mux := http.NewServeMux()
-	mux.HandleFunc(`/update/`, func(writer http.ResponseWriter, request *http.Request) {
-		writer.WriteHeader(http.StatusBadRequest)
-	})
-	mux.HandleFunc(`/update/gauge/`, controllers.GaugePage)
-	mux.HandleFunc(`/update/counter/`, controllers.CounterPage)
-	return http.ListenAndServe(`:8080`, mux)
 }

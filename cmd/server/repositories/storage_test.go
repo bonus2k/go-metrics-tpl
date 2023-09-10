@@ -106,7 +106,7 @@ func TestMemStorageImpl_GetCounter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms.counter[tt.args.name] = tt.args.value
-			got := ms.GetCounter(tt.args.name)
+			got, _ := ms.GetCounter(tt.args.name)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -135,7 +135,7 @@ func TestMemStorageImpl_GetGauge(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms.gauge[tt.args.name] = tt.args.value
-			got := ms.GetGauge(tt.args.name)
+			got, _ := ms.GetGauge(tt.args.name)
 			assert.Equal(t, got, tt.want)
 		})
 	}

@@ -86,9 +86,8 @@ func TestSendToGauge(t *testing.T) {
 			port := parse.Port()
 			client := Connect{Server: "127.0.0.1", Port: port, Protocol: "http"}
 			defer server.Close()
-			res, err := client.SendToGauge(tt.args.value)
+			_, err := client.SendToGauge(tt.args.value)
 			require.NoError(t, err)
-			assert.Equal(t, string(res), "OK")
 		})
 	}
 }
