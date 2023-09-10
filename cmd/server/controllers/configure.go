@@ -22,6 +22,13 @@ func MetricsRouter() chi.Router {
 		r.Post("/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusBadRequest)
 		})
+		r.Post("/gauge/*", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusNotFound)
+		})
+		r.Post("/counter/*", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusNotFound)
+		})
+
 	})
 	router.Get("/", AllMetrics)
 	router.Get("/value/{type}/{name}", GetValue)

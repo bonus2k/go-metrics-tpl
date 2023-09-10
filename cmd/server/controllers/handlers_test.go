@@ -51,6 +51,7 @@ func TestCounterPage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, _ := testRequest(t, server, tt.method, tt.request)
+			defer resp.Body.Close()
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 		})
@@ -98,6 +99,7 @@ func TestGaugePage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, _ := testRequest(t, server, tt.method, tt.request)
+			defer resp.Body.Close()
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 		})
