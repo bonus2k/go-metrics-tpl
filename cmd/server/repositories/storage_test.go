@@ -22,22 +22,22 @@ func TestMemStorageImpl_AddCounter(t *testing.T) {
 		},
 		{
 			name: "test#2 add counter",
-			args: args{name: "aCount", value: 6, want: 6},
+			args: args{name: "aCount", value: 6, want: 11},
 		},
 		{
 			name: "test#3 add counter",
-			args: args{name: "aCount", value: 100, want: 100},
+			args: args{name: "aCount", value: 100, want: 111},
 		},
 	}
 	ms := &MemStorageImpl{
 		gauge:   nil,
-		counter: make(map[string][]int64),
+		counter: make(map[string]int64),
 	}
-	for i, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms.AddCounter(tt.args.name, tt.args.value)
 			got := ms.counter[tt.args.name]
-			assert.Equal(t, tt.args.want, got[i])
+			assert.Equal(t, tt.args.want, got)
 		})
 	}
 }
@@ -86,21 +86,21 @@ func TestMemStorageImpl_GetCounter(t *testing.T) {
 
 	type args struct {
 		name  string
-		value []int64
+		value int64
 	}
 	tests := []struct {
 		name string
 		args args
-		want []int64
+		want int64
 	}{
 		{
 			name: "test get count",
-			args: args{name: "aCount", value: []int64{1, 3, 5, 99, 8, 7}},
-			want: []int64{1, 3, 5, 99, 8, 7},
+			args: args{name: "aCount", value: 99},
+			want: 99,
 		},
 	}
 	ms := &MemStorageImpl{
-		counter: make(map[string][]int64),
+		counter: make(map[string]int64),
 	}
 
 	for _, tt := range tests {
@@ -150,7 +150,7 @@ func TestNewMemStorage(t *testing.T) {
 			name: "test mem storage",
 			want: &MemStorageImpl{
 				gauge:   make(map[string]float64),
-				counter: make(map[string][]int64),
+				counter: make(map[string]int64),
 			},
 		},
 	}
