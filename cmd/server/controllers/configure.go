@@ -4,6 +4,7 @@ import (
 	"github.com/bonus2k/go-metrics-tpl/cmd/server/repositories"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"net/http"
 )
 
 var MemStorage repositories.MemStorage
@@ -18,6 +19,9 @@ func MetricsRouter() chi.Router {
 	router.Route("/update", func(r chi.Router) {
 		r.Post("/gauge/{name}/{value}", GaugePage)
 		r.Post("/counter/{name}/{value}", CounterPage)
+		r.Post("/*", func(writer http.ResponseWriter, request *http.Request) {
+			writer.WriteHeader(http.StatusBadRequest)
+		})
 	})
 	router.Get("/", AllMetrics)
 	router.Get("/value/{type}/{name}", GetValue)
