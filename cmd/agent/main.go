@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bonus2k/go-metrics-tpl/cmd/agent/clients"
 	"github.com/bonus2k/go-metrics-tpl/cmd/agent/services"
+	"os"
 	"time"
 )
 
@@ -13,7 +14,7 @@ func main() {
 	parseFlags()
 	count := services.GetPollCount()
 	client := clients.Connect{Server: connectAddr, Protocol: "http"}
-	fmt.Println("Connect to server", connectAddr)
+	fmt.Fprintf(os.Stdout, "Connect to server %s", connectAddr)
 	go func() {
 		for {
 			mapMetrics = services.GetMapMetrics()

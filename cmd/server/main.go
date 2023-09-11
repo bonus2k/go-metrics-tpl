@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"github.com/bonus2k/go-metrics-tpl/cmd/server/controllers"
 	"net/http"
+	"os"
 )
 
 func main() {
 	parseFlags()
-	fmt.Println("Running server on", runAddr)
+	fmt.Fprintf(os.Stdout, "Running server on %s", runAddr)
 	err := http.ListenAndServe(runAddr, controllers.MetricsRouter())
 	if err != nil {
 		panic(err)
