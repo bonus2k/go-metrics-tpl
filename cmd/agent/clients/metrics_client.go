@@ -22,8 +22,10 @@ func (con *Connect) SendToGauge(m map[string]string) ([]byte, error) {
 		req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
 		req.Header.Add("Content-Type", "text/plain")
 		if res, err = client.Do(req); err != nil {
-			defer res.Body.Close()
-			body, _ = io.ReadAll(res.Body)
+			if res != nil {
+				defer res.Body.Close()
+				body, _ = io.ReadAll(res.Body)
+			}
 			return body, err
 		}
 	}
@@ -37,7 +39,7 @@ func (con *Connect) SendToCounter(name string, value int64) ([]byte, error) {
 	reqAddress := getAddressUpdateCounter(con, name, value)
 	req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
 	req.Header.Add("Content-Type", "text/plain")
-	if res, err := client.Do(req); err == nil {
+	if res, err := client.Do(req); res != nil && err == nil {
 		defer res.Body.Close()
 		return io.ReadAll(res.Body)
 	} else {
