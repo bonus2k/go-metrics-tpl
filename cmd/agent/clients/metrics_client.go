@@ -8,7 +8,6 @@ import (
 
 type Connect struct {
 	Server   string
-	Port     string
 	Protocol string
 }
 
@@ -47,9 +46,11 @@ func (con *Connect) SendToCounter(name string, value int64) ([]byte, error) {
 }
 
 func getAddressUpdateGauge(con *Connect, name string, value string) string {
-	return fmt.Sprintf("%s://%s:%s/update/gauge/%s/%s", con.Protocol, con.Server, con.Port, name, value)
+	fmt.Sprintf("%v", con)
+	sprintf := fmt.Sprintf("%s://%s/update/gauge/%s/%s", con.Protocol, con.Server, name, value)
+	return sprintf
 }
 
 func getAddressUpdateCounter(con *Connect, name string, value int64) string {
-	return fmt.Sprintf("%s://%s:%s/update/counter/%s/%d", con.Protocol, con.Server, con.Port, name, value)
+	return fmt.Sprintf("%s://%s/update/counter/%s/%d", con.Protocol, con.Server, name, value)
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
-	url2 "net/url"
+	"net/url"
 	"testing"
 )
 
@@ -39,10 +39,8 @@ func TestSendToCounter(t *testing.T) {
 				assert.Equal(t, req.URL.String(), tt.args.url)
 				rw.Write([]byte(`OK`))
 			}))
-
-			parse, _ := url2.Parse(server.URL)
-			port := parse.Port()
-			client := Connect{Server: "127.0.0.1", Port: port, Protocol: "http"}
+			url, _ := url.Parse(server.URL)
+			client := Connect{Server: url.Host, Protocol: "http"}
 			defer server.Close()
 			res, err := client.SendToCounter(tt.args.name, tt.args.value)
 			require.NoError(t, err)
@@ -81,10 +79,8 @@ func TestSendToGauge(t *testing.T) {
 				assert.Equal(t, req.URL.String(), tt.args.url)
 				rw.Write([]byte(`OK`))
 			}))
-
-			parse, _ := url2.Parse(server.URL)
-			port := parse.Port()
-			client := Connect{Server: "127.0.0.1", Port: port, Protocol: "http"}
+			url, _ := url.Parse(server.URL)
+			client := Connect{Server: url.Host, Protocol: "http"}
 			defer server.Close()
 			_, err := client.SendToGauge(tt.args.value)
 			require.NoError(t, err)
@@ -106,7 +102,7 @@ func Test_getAddressUpdateCounter(t *testing.T) {
 		{
 			name: "test#1 address for update counter",
 			args: args{
-				con:   &Connect{Server: "localhost", Port: "8888", Protocol: "http"},
+				con:   &Connect{Server: "localhost:8888", Protocol: "http"},
 				name:  "aCount",
 				value: 99,
 			},
@@ -115,7 +111,7 @@ func Test_getAddressUpdateCounter(t *testing.T) {
 		{
 			name: "test#2 address for update counter",
 			args: args{
-				con:   &Connect{Server: "localhost", Port: "888", Protocol: "https"},
+				con:   &Connect{Server: "localhost:888", Protocol: "https"},
 				name:  "aCount",
 				value: 0,
 			},
@@ -145,7 +141,7 @@ func Test_getAddressUpdateGauge(t *testing.T) {
 		{
 			name: "test#1 address for update gauge",
 			args: args{
-				con:   &Connect{Server: "localhost", Port: "8888", Protocol: "http"},
+				con:   &Connect{Server: "localhost:8888", Protocol: "http"},
 				name:  "aGauge",
 				value: "0.99",
 			},
@@ -154,7 +150,7 @@ func Test_getAddressUpdateGauge(t *testing.T) {
 		{
 			name: "test#2 address for update counter",
 			args: args{
-				con:   &Connect{Server: "localhost", Port: "888", Protocol: "https"},
+				con:   &Connect{Server: "localhost:888", Protocol: "https"},
 				name:  "aGauge",
 				value: "-0.88",
 			},
