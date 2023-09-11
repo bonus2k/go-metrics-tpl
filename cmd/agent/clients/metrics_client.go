@@ -46,9 +46,7 @@ func (con *Connect) SendToCounter(name string, value int64) ([]byte, error) {
 }
 
 func getAddressUpdateGauge(con *Connect, name string, value string) string {
-	fmt.Sprintf("%v", con)
-	sprintf := fmt.Sprintf("%s://%s/update/gauge/%s/%s", con.Protocol, con.Server, name, value)
-	return sprintf
+	return fmt.Sprintf("%s://%s/update/gauge/%s/%s", con.Protocol, con.Server, name, value)
 }
 
 func getAddressUpdateCounter(con *Connect, name string, value int64) string {
