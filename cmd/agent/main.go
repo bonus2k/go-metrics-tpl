@@ -14,17 +14,17 @@ func main() {
 	parseFlags()
 	count := services.GetPollCount()
 	client := clients.Connect{Server: connectAddr, Protocol: "http"}
-	fmt.Fprintf(os.Stdout, "Connect to server %s", connectAddr)
+	fmt.Fprintf(os.Stdout, "Connect to server %s\n", connectAddr)
 	go func() {
 		for {
 			mapMetrics = services.GetMapMetrics()
-			time.Sleep(pollInterval * time.Second)
+			time.Sleep(time.Duration(pollInterval) * time.Second)
 		}
 	}()
 
 	go func() {
 		for {
-			time.Sleep(reportInterval * time.Second)
+			time.Sleep(time.Duration(reportInterval) * time.Second)
 			services.AddRandomValue(mapMetrics)
 			client.SendToGauge(mapMetrics)
 			client.SendToCounter("PollCount", count())

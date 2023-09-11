@@ -9,7 +9,7 @@ import (
 
 func main() {
 	parseFlags()
-	fmt.Fprintf(os.Stdout, "Running server on %s", runAddr)
+	fmt.Fprintf(os.Stdout, "Running server on %s\n", runAddr)
 	err := http.ListenAndServe(runAddr, controllers.MetricsRouter())
 	if err != nil {
 		panic(err)
