@@ -161,3 +161,33 @@ func TestNewMemStorage(t *testing.T) {
 		})
 	}
 }
+
+func TestMemStorageImpl_GetAllMetrics(t *testing.T) {
+	type fields struct {
+		gauge   map[string]float64
+		counter map[string]int64
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []Metric
+	}{
+		{
+			name: "all metrics",
+			fields: fields{
+				gauge:   map[string]float64{"aGauge": 999.0},
+				counter: map[string]int64{"aCounter": 100},
+			},
+			want: []Metric{{Name: "aGauge", Value: "999"}, {Name: "aCounter", Value: "100"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ms := &MemStorageImpl{
+				gauge:   tt.fields.gauge,
+				counter: tt.fields.counter,
+			}
+			assert.Equalf(t, tt.want, ms.GetAllMetrics(), "GetAllMetrics()")
+		})
+	}
+}
