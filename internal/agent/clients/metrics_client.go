@@ -4,24 +4,27 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
 type Connect struct {
 	Server   string
 	Protocol string
+	Client   http.Client
 }
 
 func (con *Connect) SendToGauge(m map[string]string) ([]byte, error) {
-	client := http.DefaultClient
-	defer client.CloseIdleConnections()
+	defer con.Client.CloseIdleConnections()
 	var body []byte
-	var err error
 	var res *http.Response
 	for k, v := range m {
 		reqAddress := getAddressUpdateGauge(con, k, v)
-		req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
+		req, err := http.NewRequest(http.MethodPost, reqAddress, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stdout, "[SendToCounter] %v", err)
+		}
 		req.Header.Add("Content-Type", "text/plain")
-		if res, err = client.Do(req); err != nil {
+		if res, err = con.Client.Do(req); err != nil {
 			if res != nil {
 				defer res.Body.Close()
 				body, _ = io.ReadAll(res.Body)
@@ -34,12 +37,14 @@ func (con *Connect) SendToGauge(m map[string]string) ([]byte, error) {
 
 func (con *Connect) SendToCounter(name string, value int64) ([]byte, error) {
 
-	client := http.DefaultClient
-	defer client.CloseIdleConnections()
+	defer con.Client.CloseIdleConnections()
 	reqAddress := getAddressUpdateCounter(con, name, value)
-	req, _ := http.NewRequest(http.MethodPost, reqAddress, nil)
+	req, err := http.NewRequest(http.MethodPost, reqAddress, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "[SendToCounter] %v", err)
+	}
 	req.Header.Add("Content-Type", "text/plain")
-	if res, err := client.Do(req); res != nil && err == nil {
+	if res, err := con.Client.Do(req); res != nil && err == nil {
 		defer res.Body.Close()
 		return io.ReadAll(res.Body)
 	} else {

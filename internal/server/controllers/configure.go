@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/bonus2k/go-metrics-tpl/cmd/server/repositories"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"net/http"

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/cmd/server/controllers"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/controllers"
 	"net/http"
 	"os"
 )
