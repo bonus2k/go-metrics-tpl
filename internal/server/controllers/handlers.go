@@ -44,8 +44,6 @@ func GaugePage(w http.ResponseWriter, r *http.Request) {
 	}
 	MemStorage.AddGauge(name, num)
 	w.WriteHeader(http.StatusOK)
-	return
-
 }
 
 func GetValue(w http.ResponseWriter, r *http.Request) {
