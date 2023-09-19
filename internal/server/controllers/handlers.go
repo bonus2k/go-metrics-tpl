@@ -37,14 +37,15 @@ func GaugePage(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")
 
-	if num, err := strconv.ParseFloat(value, 64); err != nil {
+	num, err := strconv.ParseFloat(value, 64)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	} else {
-		MemStorage.AddGauge(name, num)
-		w.WriteHeader(http.StatusOK)
-		return
 	}
+	MemStorage.AddGauge(name, num)
+	w.WriteHeader(http.StatusOK)
+	return
+
 }
 
 func GetValue(w http.ResponseWriter, r *http.Request) {
