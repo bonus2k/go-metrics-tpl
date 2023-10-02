@@ -10,6 +10,9 @@ import (
 func main() {
 	parseFlags()
 	err := logger.Initialize(runLog)
+	if err != nil {
+		panic(err)
+	}
 	logger.Log.Info(fmt.Sprintf("Running server on %s log level %s", runAddr, runLog))
 	err = http.ListenAndServe(runAddr, controllers.MetricsRouter())
 	if err != nil {
