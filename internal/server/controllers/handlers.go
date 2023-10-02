@@ -3,7 +3,9 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bonus2k/go-metrics-tpl/internal/logger"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"strconv"
@@ -54,13 +56,19 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 		if gauge, ok := MemStorage.GetGauge(name); !ok {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			io.WriteString(w, fmt.Sprintf("%v", gauge))
+			_, err := io.WriteString(w, fmt.Sprintf("%v", gauge))
+			if err != nil {
+				logger.Log.Error("[GetValue gauge]", zap.Error(err))
+			}
 		}
 	case "counter":
 		if counter, ok := MemStorage.GetCounter(name); !ok {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			io.WriteString(w, fmt.Sprintf("%v", counter))
+			_, err := io.WriteString(w, fmt.Sprintf("%v", counter))
+			if err != nil {
+				logger.Log.Error("[GetValue counter]", zap.Error(err))
+			}
 		}
 	default:
 		w.WriteHeader(http.StatusNotFound)
@@ -70,5 +78,8 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 func AllMetrics(w http.ResponseWriter, r *http.Request) {
 	metrics := MemStorage.GetAllMetrics()
 	marshal, _ := json.Marshal(metrics)
-	w.Write(marshal)
+	_, err := w.Write(marshal)
+	if err != nil {
+		logger.Log.Error("[AllMetrics]", zap.Error(err))
+	}
 }
