@@ -10,6 +10,7 @@ import (
 var connectAddr string
 var reportInterval int
 var pollInterval int
+var runLog string
 
 type config struct {
 	ConnectAddr    string `env:"ADDRESS"`
@@ -22,6 +23,7 @@ func parseFlags() {
 	flag.StringVar(&connectAddr, "a", "localhost:8080", "address and port for connecting to server")
 	flag.IntVar(&reportInterval, "r", 10, "timer of report interval for send metrics")
 	flag.IntVar(&pollInterval, "p", 2, "timer of poll interval for metrics")
+	flag.StringVar(&runLog, "l", "info", "log level")
 	flag.Parse()
 
 	opts := env.Options{

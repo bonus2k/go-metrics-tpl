@@ -2,77 +2,86 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/bonus2k/go-metrics-tpl/internal/logger"
-	"github.com/go-chi/chi/v5"
+	"github.com/bonus2k/go-metrics-tpl/internal/models"
 	"go.uber.org/zap"
-	"io"
 	"net/http"
-	"strconv"
+	"strings"
 )
 
-func CounterPage(w http.ResponseWriter, r *http.Request) {
+func SaveMetric(w http.ResponseWriter, r *http.Request) {
 	if MemStorage == nil {
 		panic("storage not initialized")
 	}
-
-	w.Header().Set("Content-Type", "text/plain")
-	name := chi.URLParam(r, "name")
-	value := chi.URLParam(r, "value")
-
-	if num, err := strconv.ParseInt(value, 10, 64); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	logger.Log.Debug("decoding request")
+	var metric models.Metrics
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&metric); err != nil {
+		logger.Log.Debug("cannot decode request JSON body", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
 		return
-	} else {
-		MemStorage.AddCounter(name, num)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	switch strings.ToLower(metric.MType) {
+	case "gauge":
+		MemStorage.AddGauge(metric.ID, *metric.Value)
 		w.WriteHeader(http.StatusOK)
 		return
-	}
-}
-
-func GaugePage(w http.ResponseWriter, r *http.Request) {
-	if MemStorage == nil {
-		panic("storage not initialized")
-	}
-
-	w.Header().Set("Content-Type", "text/plain")
-	name := chi.URLParam(r, "name")
-	value := chi.URLParam(r, "value")
-
-	num, err := strconv.ParseFloat(value, 64)
-	if err != nil {
+	case "counter":
+		MemStorage.AddCounter(metric.ID, *metric.Delta)
+		w.WriteHeader(http.StatusOK)
+		return
+	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	MemStorage.AddGauge(name, num)
-	w.WriteHeader(http.StatusOK)
 }
 
-func GetValue(w http.ResponseWriter, r *http.Request) {
-	typeV := chi.URLParam(r, "type")
-	name := chi.URLParam(r, "name")
-	switch typeV {
+func GetMetric(w http.ResponseWriter, r *http.Request) {
+	if MemStorage == nil {
+		panic("storage not initialized")
+	}
+	logger.Log.Debug("decoding request")
+	var metric models.Metrics
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&metric); err != nil {
+		logger.Log.Debug("cannot decode request JSON body", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if len(metric.ID) == 0 || len(metric.MType) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	switch strings.ToLower(metric.MType) {
 	case "gauge":
-		if gauge, ok := MemStorage.GetGauge(name); !ok {
-			w.WriteHeader(http.StatusNotFound)
+		if gauge, ok := MemStorage.GetGauge(metric.ID); ok {
+			metric.Value = &gauge
 		} else {
-			_, err := io.WriteString(w, fmt.Sprintf("%v", gauge))
-			if err != nil {
-				logger.Log.Error("[GetValue gauge]", zap.Error(err))
-			}
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 	case "counter":
-		if counter, ok := MemStorage.GetCounter(name); !ok {
-			w.WriteHeader(http.StatusNotFound)
+		if counter, ok := MemStorage.GetCounter(metric.ID); ok {
+			metric.Delta = &counter
 		} else {
-			_, err := io.WriteString(w, fmt.Sprintf("%v", counter))
-			if err != nil {
-				logger.Log.Error("[GetValue counter]", zap.Error(err))
-			}
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 	default:
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(metric); err != nil {
+		logger.Log.Debug("error encoding response", zap.Error(err))
+		return
+	}
+	logger.Log.Debug("sending HTTP 200 response")
+	w.WriteHeader(http.StatusOK)
+	return
 }
 
 func AllMetrics(w http.ResponseWriter, r *http.Request) {

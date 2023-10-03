@@ -2,60 +2,56 @@ package clients
 
 import (
 	"fmt"
-	"io"
-	"net/http"
-	"os"
+	"github.com/bonus2k/go-metrics-tpl/internal/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/models"
+	"github.com/go-resty/resty/v2"
+	"go.uber.org/zap"
+	"strconv"
 )
 
 type Connect struct {
 	Server   string
 	Protocol string
-	Client   http.Client
+	Client   resty.Client
 }
 
-func (con *Connect) SendToGauge(m map[string]string) ([]byte, error) {
-	defer con.Client.CloseIdleConnections()
-	var body []byte
-	var res *http.Response
+func (con *Connect) SendToGauge(m map[string]string) {
+	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
 	for k, v := range m {
-		reqAddress := getAddressUpdateGauge(con, k, v)
-		req, err := http.NewRequest(http.MethodPost, reqAddress, nil)
+		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			fmt.Fprintf(os.Stdout, "[SendToCounter] %v", err)
+			logger.Log.Error("can't parse float")
+			continue
 		}
-		req.Header.Add("Content-Type", "text/plain")
-		if res, err = con.Client.Do(req); err != nil {
-			if res != nil {
-				defer res.Body.Close()
-				body, _ = io.ReadAll(res.Body)
-			}
-			return body, err
+		resp, err := con.Client.R().
+			SetHeader("Content-Type", "application/json").
+			SetBody(models.Metrics{
+				ID:    k,
+				MType: "gauge",
+				Value: &value,
+			}).
+			Post(address)
+
+		if err != nil {
+			logger.Log.Error("error response", zap.String("code", resp.Status()))
 		}
 	}
-	return nil, nil
 }
 
-func (con *Connect) SendToCounter(name string, value int64) ([]byte, error) {
+func (con *Connect) SendToCounter(name string, value int64) {
 
-	defer con.Client.CloseIdleConnections()
-	reqAddress := getAddressUpdateCounter(con, name, value)
-	req, err := http.NewRequest(http.MethodPost, reqAddress, nil)
+	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
+	resp, err := con.Client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(models.Metrics{
+			ID:    name,
+			MType: "counter",
+			Delta: &value,
+		}).
+		Post(address)
+
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "[SendToCounter] %v", err)
-	}
-	req.Header.Add("Content-Type", "text/plain")
-	if res, err := con.Client.Do(req); res != nil && err == nil {
-		defer res.Body.Close()
-		return io.ReadAll(res.Body)
-	} else {
-		return nil, err
-	}
-}
+		logger.Log.Error("error response", zap.String("code", resp.Status()))
 
-func getAddressUpdateGauge(con *Connect, name string, value string) string {
-	return fmt.Sprintf("%s://%s/update/gauge/%s/%s", con.Protocol, con.Server, name, value)
-}
-
-func getAddressUpdateCounter(con *Connect, name string, value int64) string {
-	return fmt.Sprintf("%s://%s/update/counter/%s/%d", con.Protocol, con.Server, name, value)
+	}
 }
