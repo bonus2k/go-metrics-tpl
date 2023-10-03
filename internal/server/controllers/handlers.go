@@ -56,38 +56,34 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	if len(metric.ID) == 0 || len(metric.MType) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
 	w.Header().Set("Content-Type", "application/json")
+
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
 		if gauge, ok := MemStorage.GetGauge(metric.ID); ok {
 			metric.Value = &gauge
 		} else {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 	case "counter":
 		if counter, ok := MemStorage.GetCounter(metric.ID); ok {
 			metric.Delta = &counter
 		} else {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(metric); err != nil {
 		logger.Log.Debug("error encoding response", zap.Error(err))
 		return
 	}
 	logger.Log.Debug("sending HTTP 200 response")
-	w.WriteHeader(http.StatusOK)
 }
 
 func CounterPage(w http.ResponseWriter, r *http.Request) {
