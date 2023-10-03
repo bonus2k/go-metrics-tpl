@@ -56,12 +56,12 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+
 	if len(metric.ID) == 0 || len(metric.MType) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
 		if gauge, ok := MemStorage.GetGauge(metric.ID); ok {
