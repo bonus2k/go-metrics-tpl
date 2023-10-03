@@ -51,6 +51,7 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	var metric models.Metrics
 	dec := json.NewDecoder(r.Body)
+	defer r.Body.Close()
 	if err := dec.Decode(&metric); err != nil {
 		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
