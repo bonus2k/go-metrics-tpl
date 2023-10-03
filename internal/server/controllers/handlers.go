@@ -56,7 +56,6 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
@@ -77,7 +76,7 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(metric); err != nil {
 		logger.Log.Debug("error encoding response", zap.Error(err))
