@@ -50,7 +50,7 @@ func MiddlewareLog(h http.Handler) http.Handler {
 		h.ServeHTTP(&lw, r)
 		duration := time.Since(start)
 		sugar := Log.Sugar()
-		sugar.Infoln(
+		sugar.Debugf(
 			"uri", r.RequestURI,
 			"method", r.Method,
 			"status", responseData.status,

@@ -23,7 +23,7 @@ func (con *Connect) SendToGauge(m map[string]string) {
 			logger.Log.Error("can't parse float")
 			continue
 		}
-		resp, err := con.Client.R().
+		_, err = con.Client.R().
 			SetHeader("Content-Type", "application/json").
 			SetBody(models.Metrics{
 				ID:    k,
@@ -33,7 +33,7 @@ func (con *Connect) SendToGauge(m map[string]string) {
 			Post(address)
 
 		if err != nil {
-			logger.Log.Error("error response", zap.String("code", resp.Status()))
+			logger.Log.Error("[SendToCounter]", zap.Error(err))
 		}
 	}
 }
@@ -41,7 +41,7 @@ func (con *Connect) SendToGauge(m map[string]string) {
 func (con *Connect) SendToCounter(name string, value int64) {
 
 	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
-	resp, err := con.Client.R().
+	_, err := con.Client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(models.Metrics{
 			ID:    name,
@@ -51,7 +51,6 @@ func (con *Connect) SendToCounter(name string, value int64) {
 		Post(address)
 
 	if err != nil {
-		logger.Log.Error("error response", zap.String("code", resp.Status()))
-
+		logger.Log.Error("[SendToCounter]", zap.Error(err))
 	}
 }
