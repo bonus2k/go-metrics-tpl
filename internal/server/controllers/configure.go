@@ -22,10 +22,10 @@ func MetricsRouter() chi.Router {
 		r.Post("/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusBadRequest)
 		})
-		r.Post("/update/gauge/*", func(writer http.ResponseWriter, request *http.Request) {
+		r.Post("/gauge/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusNotFound)
 		})
-		r.Post("/update/counter/*", func(writer http.ResponseWriter, request *http.Request) {
+		r.Post("/counter/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusNotFound)
 		})
 
