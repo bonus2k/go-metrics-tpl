@@ -16,12 +16,10 @@ func init() {
 func MetricsRouter() chi.Router {
 	router := chi.NewRouter()
 	router.Use(logger.MiddlewareLog)
-	router.Route("/", func(r chi.Router) {
-		r.Post("/update/", SaveMetric)
-		r.Post("/value/", GetMetric)
-		r.Post("/update/gauge/{name}/{value}", GaugePage)
-		r.Post("/update/counter/{name}/{value}", CounterPage)
-		r.Post("/update/*", func(writer http.ResponseWriter, request *http.Request) {
+	router.Route("/update", func(r chi.Router) {
+		r.Post("/gauge/{name}/{value}", GaugePage)
+		r.Post("/counter/{name}/{value}", CounterPage)
+		r.Post("/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusBadRequest)
 		})
 		r.Post("/update/gauge/*", func(writer http.ResponseWriter, request *http.Request) {
@@ -32,6 +30,8 @@ func MetricsRouter() chi.Router {
 		})
 
 	})
+	router.Post("/update/", SaveMetric)
+	router.Post("/value/", GetMetric)
 	router.Get("/", AllMetrics)
 	router.Get("/value/{type}/{name}", GetValue)
 	return router

@@ -57,27 +57,27 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
-		if gauge, ok := MemStorage.GetGauge(metric.ID); ok {
-			metric.Value = &gauge
-		} else {
+		gauge, ok := MemStorage.GetGauge(metric.ID)
+		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+		metric.Value = &gauge
 	case "counter":
-		if counter, ok := MemStorage.GetCounter(metric.ID); ok {
-			metric.Delta = &counter
-		} else {
+		counter, ok := MemStorage.GetCounter(metric.ID)
+		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+		metric.Delta = &counter
 	default:
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(metric); err != nil {
 		logger.Log.Debug("error encoding response", zap.Error(err))
