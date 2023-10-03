@@ -63,19 +63,16 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 		gauge, ok := MemStorage.GetGauge(metric.ID)
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
-			return
 		}
 		metric.Value = &gauge
 	case "counter":
 		counter, ok := MemStorage.GetCounter(metric.ID)
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
-			return
 		}
 		metric.Delta = &counter
 	default:
 		w.WriteHeader(http.StatusBadRequest)
-		return
 	}
 
 	enc := json.NewEncoder(w)
