@@ -28,10 +28,12 @@ func SaveMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
+		logger.Log.Info("save", zap.Any("gauge", metric))
 		MemStorage.AddGauge(metric.ID, *metric.Value)
 		w.WriteHeader(http.StatusOK)
 		return
 	case "counter":
+		logger.Log.Info("save", zap.Any("counter", metric))
 		MemStorage.AddCounter(metric.ID, *metric.Delta)
 		w.WriteHeader(http.StatusOK)
 		return
