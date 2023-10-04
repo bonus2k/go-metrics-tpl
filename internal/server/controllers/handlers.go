@@ -30,16 +30,17 @@ func SaveMetric(w http.ResponseWriter, r *http.Request) {
 	case "gauge":
 		logger.Log.Info("save", zap.Any("gauge", metric))
 		MemStorage.AddGauge(metric.ID, *metric.Value)
-		w.WriteHeader(http.StatusOK)
-		return
 	case "counter":
 		logger.Log.Info("save", zap.Any("counter", metric))
 		MemStorage.AddCounter(metric.ID, *metric.Delta)
-		w.WriteHeader(http.StatusOK)
-		return
 	default:
 		logger.Log.Info("default", zap.Any("metric", metric))
 		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(metric); err != nil {
+		logger.Log.Debug("error encoding response", zap.Error(err))
 		return
 	}
 }
@@ -77,7 +78,7 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	enc := json.NewEncoder(w)
-	if err := enc.Encode(&metric); err != nil {
+	if err := enc.Encode(metric); err != nil {
 		logger.Log.Debug("error encoding response", zap.Error(err))
 		return
 	}

@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bytes"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
@@ -14,6 +15,7 @@ type (
 
 	loggingResponseWriter struct {
 		http.ResponseWriter
+		body         bytes.Buffer
 		responseData *responseData
 	}
 )
@@ -38,7 +40,7 @@ func Initialize(level string) error {
 func MiddlewareLog(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-
+		var buf bytes.Buffer
 		responseData := &responseData{
 			status: 0,
 			size:   0,
@@ -46,16 +48,20 @@ func MiddlewareLog(h http.Handler) http.Handler {
 		lw := loggingResponseWriter{
 			ResponseWriter: w,
 			responseData:   responseData,
+			body:           buf,
 		}
+
 		h.ServeHTTP(&lw, r)
 		duration := time.Since(start)
 		sugar := Log.Sugar()
-		sugar.Debugf(
+
+		sugar.Infoln(
 			"uri", r.RequestURI,
 			"method", r.Method,
 			"status", responseData.status,
 			"duration", duration,
 			"size", responseData.size,
+			"body", string(lw.body.Bytes()),
 		)
 
 	}
@@ -63,6 +69,7 @@ func MiddlewareLog(h http.Handler) http.Handler {
 }
 
 func (r *loggingResponseWriter) Write(b []byte) (int, error) {
+	r.body.Write(b)
 	size, err := r.ResponseWriter.Write(b)
 	r.responseData.size += size
 	return size, err
