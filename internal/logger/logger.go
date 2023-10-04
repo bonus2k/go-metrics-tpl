@@ -61,7 +61,7 @@ func MiddlewareLog(h http.Handler) http.Handler {
 			"status", responseData.status,
 			"duration", duration,
 			"size", responseData.size,
-			"body", string(lw.body.Bytes()),
+			"body", lw.body.String(),
 		)
 
 	}
