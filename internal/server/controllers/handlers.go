@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	"github.com/bonus2k/go-metrics-tpl/internal/models"
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"io"
@@ -18,14 +18,14 @@ func SaveMetric(w http.ResponseWriter, r *http.Request) {
 		panic("storage not initialized")
 	}
 	logger.Log.Debug("decoding request")
-	var metric models.Metrics
+	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&metric); err != nil {
 		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(m.KeyContentType, m.TypeJSONContent)
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
 		logger.Log.Info("save", zap.Any("gauge", metric))
@@ -50,7 +50,7 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 		panic("storage not initialized")
 	}
 	logger.Log.Debug("decoding request")
-	var metric models.Metrics
+	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	if err := dec.Decode(&metric); err != nil {
@@ -59,7 +59,7 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.Log.Info("get metric", zap.Any("metric", metric))
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(m.KeyContentType, m.TypeJSONContent)
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
 		gauge, ok := MemStorage.GetGauge(metric.ID)
@@ -90,7 +90,7 @@ func CounterPage(w http.ResponseWriter, r *http.Request) {
 		panic("storage not initialized")
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")
 
@@ -109,7 +109,7 @@ func GaugePage(w http.ResponseWriter, r *http.Request) {
 		panic("storage not initialized")
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")
 

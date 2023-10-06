@@ -27,7 +27,7 @@ func TestCounterPage(t *testing.T) {
 			name:    "test counter page 200",
 			request: "/update/counter/aCount/100",
 			method:  http.MethodPost,
-			want:    want{contentType: "text/plain", statusCode: 200},
+			want:    want{contentType: "text/html", statusCode: 200},
 		},
 		{
 			name:    "test counter page 405",
@@ -45,13 +45,13 @@ func TestCounterPage(t *testing.T) {
 			name:    "test counter page 400",
 			request: "/update/counter/aCount/ttt",
 			method:  http.MethodPost,
-			want:    want{contentType: "text/plain", statusCode: 400},
+			want:    want{contentType: "text/html", statusCode: 400},
 		},
 		{
 			name:    "test update page 400",
 			request: "/update/counter/aCount/ttt",
 			method:  http.MethodPost,
-			want:    want{contentType: "text/plain", statusCode: 400},
+			want:    want{contentType: "text/html", statusCode: 400},
 		},
 	}
 
@@ -82,7 +82,7 @@ func TestGaugePage(t *testing.T) {
 			name:    "test gauge page 200",
 			request: "/update/gauge/aGauge/100",
 			method:  http.MethodPost,
-			want:    want{contentType: "text/plain", statusCode: 200},
+			want:    want{contentType: "text/html", statusCode: 200},
 		},
 		{
 			name:    "test gauge page 405",
@@ -100,7 +100,7 @@ func TestGaugePage(t *testing.T) {
 			name:    "test gauge page 400",
 			request: "/update/gauge/aGauge/ttt",
 			method:  http.MethodPost,
-			want:    want{contentType: "text/plain", statusCode: 400},
+			want:    want{contentType: "text/html", statusCode: 400},
 		},
 	}
 	for _, tt := range tests {

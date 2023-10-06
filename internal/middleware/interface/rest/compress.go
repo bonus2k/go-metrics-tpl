@@ -3,7 +3,7 @@ package rest
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/bonus2k/go-metrics-tpl/internal/models"
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
 	"io"
 	"net/http"
@@ -40,14 +40,14 @@ func GzipReqCompression(c *resty.Client, r *http.Request) error {
 		gzipw.Close()
 		r.ContentLength = int64(buf.Len())
 		r.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
-		c.Header.Add(models.KeyContentEncoding, models.TypeEncodingContent)
+		c.Header.Add(m.KeyContentEncoding, m.TypeEncodingContent)
 	}
 	return nil
 }
 
 func GzipReqDecompression(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.Header.Get(models.KeyContentEncoding), models.TypeEncodingContent) {
+		if strings.Contains(r.Header.Get(m.KeyContentEncoding), m.TypeEncodingContent) {
 			gz, err := gzip.NewReader(r.Body)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -76,23 +76,26 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 
 func GzipResCompression(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.Contains(r.Header.Get(models.KeyAcceptEncoding), models.TypeEncodingContent) && isPayloadSupported(r.Header) {
-			gz, err := gzip.NewWriterLevel(w, gzip.BestCompression)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			defer gz.Close()
-			w.Header().Set(models.KeyContentEncoding, models.TypeEncodingContent)
-			h.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
+		if !strings.Contains(r.Header.Get(m.KeyAcceptEncoding), m.TypeEncodingContent) || !isPayloadSupported(r.Header) {
+			h.ServeHTTP(w, r)
+			return
 		}
-		h.ServeHTTP(w, r)
+
+		gz, err := gzip.NewWriterLevel(w, gzip.BestCompression)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer gz.Close()
+		w.Header().Set(m.KeyContentEncoding, m.TypeEncodingContent)
+		h.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
+
 	})
 }
 
 func isPayloadSupported(h http.Header) bool {
 	for _, c := range contentIsCompressed {
-		if strings.Contains(h.Get(models.KeyContentType), c) {
+		if strings.Contains(h.Get(m.KeyContentType), c) {
 			return true
 		}
 	}

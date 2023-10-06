@@ -6,4 +6,5 @@ const (
 	KeyAcceptEncoding   = "Accept-Encoding"
 	TypeJSONContent     = "application/json"
 	TypeEncodingContent = "gzip"
+	TypeHTMLContent     = "text/html"
 )
