@@ -59,7 +59,7 @@ func GzipDecompression(h http.Handler) http.Handler {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			w.Write(body)
+			r.Body = io.NopCloser(bytes.NewReader(body))
 		}
 		h.ServeHTTP(w, r)
 	})
