@@ -2,7 +2,7 @@ package clients
 
 import (
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/internal/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
@@ -24,7 +24,7 @@ func (con *Connect) SendToGauge(m map[string]string) {
 			continue
 		}
 		_, err = con.Client.R().
-			SetHeader("Content-Type", "application/json").
+			SetHeader(models.KeyContentType, models.TypeJsonContent).
 			SetBody(models.Metrics{
 				ID:    k,
 				MType: "gauge",
@@ -42,7 +42,7 @@ func (con *Connect) SendToCounter(name string, value int64) {
 
 	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
 	_, err := con.Client.R().
-		SetHeader("Content-Type", "application/json").
+		SetHeader(models.KeyContentType, models.TypeJsonContent).
 		SetBody(models.Metrics{
 			ID:    name,
 			MType: "counter",

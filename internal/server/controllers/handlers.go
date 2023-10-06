@@ -3,7 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/internal/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"

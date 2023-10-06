@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/clients"
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/services"
-	"github.com/bonus2k/go-metrics-tpl/internal/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/go-resty/resty/v2"
 	"time"
 )
@@ -30,7 +31,7 @@ func main() {
 func report(mapMetrics *map[string]string) func() {
 	m := mapMetrics
 	count := services.GetPollCount()
-	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: *resty.New()}
+	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: *resty.New().SetPreRequestHook(rest.GzipCompression)}
 	logger.Log.Info(fmt.Sprintf("Connect to server %s, report interval=%d, poll interval=%d", connectAddr, reportInterval, pollInterval))
 	return func() {
 		services.AddRandomValue(*m)

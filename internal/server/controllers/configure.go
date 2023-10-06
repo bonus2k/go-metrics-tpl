@@ -1,7 +1,8 @@
 package controllers
 
 import (
-	"github.com/bonus2k/go-metrics-tpl/internal/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -16,6 +17,7 @@ func init() {
 func MetricsRouter() chi.Router {
 	router := chi.NewRouter()
 	router.Use(logger.MiddlewareLog)
+	router.Use(rest.GzipDecompression)
 	router.Route("/update", func(r chi.Router) {
 		r.Post("/gauge/{name}/{value}", GaugePage)
 		r.Post("/counter/{name}/{value}", CounterPage)

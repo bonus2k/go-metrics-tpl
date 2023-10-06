@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/internal/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/controllers"
 	"go.uber.org/multierr"
 	"net/http"
