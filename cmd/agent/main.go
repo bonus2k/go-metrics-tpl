@@ -31,7 +31,7 @@ func main() {
 func report(mapMetrics *map[string]string) func() {
 	m := mapMetrics
 	count := services.GetPollCount()
-	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: *resty.New().SetPreRequestHook(rest.GzipCompression)}
+	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: *resty.New().SetPreRequestHook(rest.GzipReqCompression)}
 	logger.Log.Info(fmt.Sprintf("Connect to server %s, report interval=%d, poll interval=%d", connectAddr, reportInterval, pollInterval))
 	return func() {
 		services.AddRandomValue(*m)

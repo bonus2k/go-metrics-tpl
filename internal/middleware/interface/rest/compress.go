@@ -19,7 +19,7 @@ var contentIsCompressed = []string{
 	"text/xml",
 }
 
-func GzipCompression(c *resty.Client, r *http.Request) error {
+func GzipReqCompression(c *resty.Client, r *http.Request) error {
 	if r.Body != nil && isPayloadSupported(r.Header) {
 		var buf bytes.Buffer
 		body, err := io.ReadAll(r.Body)
@@ -45,7 +45,7 @@ func GzipCompression(c *resty.Client, r *http.Request) error {
 	return nil
 }
 
-func GzipDecompression(h http.Handler) http.Handler {
+func GzipReqDecompression(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.Header.Get(models.KeyContentEncoding), models.TypeEncodingContent) {
 			gz, err := gzip.NewReader(r.Body)
@@ -60,6 +60,31 @@ func GzipDecompression(h http.Handler) http.Handler {
 				return
 			}
 			r.Body = io.NopCloser(bytes.NewReader(body))
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
+type gzipWriter struct {
+	http.ResponseWriter
+	Writer io.Writer
+}
+
+func (w gzipWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
+func GzipResCompression(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.Header.Get(models.KeyAcceptEncoding), models.TypeEncodingContent) && isPayloadSupported(r.Header) {
+			gz, err := gzip.NewWriterLevel(w, gzip.BestCompression)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer gz.Close()
+			w.Header().Set(models.KeyContentEncoding, models.TypeEncodingContent)
+			h.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
 		}
 		h.ServeHTTP(w, r)
 	})

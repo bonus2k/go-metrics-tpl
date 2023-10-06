@@ -16,8 +16,11 @@ func init() {
 
 func MetricsRouter() chi.Router {
 	router := chi.NewRouter()
-	router.Use(logger.MiddlewareLog)
-	router.Use(rest.GzipDecompression)
+	router.Use(
+		logger.MiddlewareLog,
+		rest.GzipReqDecompression,
+		rest.GzipResCompression,
+	)
 	router.Route("/update", func(r chi.Router) {
 		r.Post("/gauge/{name}/{value}", GaugePage)
 		r.Post("/counter/{name}/{value}", CounterPage)
