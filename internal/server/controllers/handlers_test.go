@@ -190,7 +190,7 @@ func TestAllMetrics(t *testing.T) {
 			name:    "test all metrics 200",
 			request: "/",
 			method:  http.MethodGet,
-			want:    want{contentType: "text/plain; charset=utf-8", statusCode: 200, body: "[{\"Name\":\"aGauge\",\"Value\":\"100\"},{\"Name\":\"aCount\",\"Value\":\"2098\"}]"},
+			want:    want{contentType: "text/html", statusCode: 200, body: "[{\"Name\":\"aGauge\",\"Value\":\"100\"},{\"Name\":\"aCount\",\"Value\":\"2098\"}]"},
 		},
 		{
 			name:    "test all metrics 405",
