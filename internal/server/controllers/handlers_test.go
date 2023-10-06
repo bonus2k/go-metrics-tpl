@@ -131,13 +131,13 @@ func TestGetValue(t *testing.T) {
 			name:    "test value aGauge 200",
 			request: "/value/gauge/aGauge",
 			method:  http.MethodGet,
-			want:    want{contentType: "text/plain; charset=utf-8", statusCode: 200, body: "100"},
+			want:    want{contentType: "text/html", statusCode: 200, body: "100"},
 		},
 		{
 			name:    "test value aCount 200",
 			request: "/value/counter/aCount",
 			method:  http.MethodGet,
-			want:    want{contentType: "text/plain; charset=utf-8", statusCode: 200, body: "1099"},
+			want:    want{contentType: "text/html", statusCode: 200, body: "1099"},
 		},
 		{
 			name:    "test value gauge page 404",

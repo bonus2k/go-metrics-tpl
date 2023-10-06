@@ -130,6 +130,7 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 		if gauge, ok := MemStorage.GetGauge(name); !ok {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
+			w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 			_, err := io.WriteString(w, fmt.Sprintf("%v", gauge))
 			if err != nil {
 				logger.Log.Error("[GetValue gauge]", zap.Error(err))
@@ -139,6 +140,7 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 		if counter, ok := MemStorage.GetCounter(name); !ok {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
+			w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 			_, err := io.WriteString(w, fmt.Sprintf("%v", counter))
 			if err != nil {
 				logger.Log.Error("[GetValue counter]", zap.Error(err))
