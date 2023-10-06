@@ -152,6 +152,7 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 func AllMetrics(w http.ResponseWriter, r *http.Request) {
 	metrics := MemStorage.GetAllMetrics()
 	marshal, _ := json.Marshal(metrics)
+	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	_, err := w.Write(marshal)
 	if err != nil {
 		logger.Log.Error("[AllMetrics]", zap.Error(err))
