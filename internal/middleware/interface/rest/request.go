@@ -61,6 +61,7 @@ func GzipDecompression(h http.Handler) http.Handler {
 			}
 			w.Write(body)
 		}
+		h.ServeHTTP(w, r)
 	})
 }
 

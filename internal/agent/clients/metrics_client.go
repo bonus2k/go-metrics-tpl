@@ -24,7 +24,7 @@ func (con *Connect) SendToGauge(m map[string]string) {
 			continue
 		}
 		_, err = con.Client.R().
-			SetHeader(models.KeyContentType, models.TypeJsonContent).
+			SetHeader(models.KeyContentType, models.TypeJSONContent).
 			SetBody(models.Metrics{
 				ID:    k,
 				MType: "gauge",
@@ -42,7 +42,7 @@ func (con *Connect) SendToCounter(name string, value int64) {
 
 	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
 	_, err := con.Client.R().
-		SetHeader(models.KeyContentType, models.TypeJsonContent).
+		SetHeader(models.KeyContentType, models.TypeJSONContent).
 		SetBody(models.Metrics{
 			ID:    name,
 			MType: "counter",
