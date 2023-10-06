@@ -76,7 +76,7 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 
 func GzipResCompression(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get(m.KeyAcceptEncoding), m.TypeEncodingContent) || !isPayloadSupported(r.Header) {
+		if !strings.Contains(r.Header.Get(m.KeyAcceptEncoding), m.TypeEncodingContent) {
 			h.ServeHTTP(w, r)
 			return
 		}
