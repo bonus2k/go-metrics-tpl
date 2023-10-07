@@ -15,7 +15,14 @@ func main() {
 	parseFlags()
 	memService := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics)
 	saveMemTicker := time.NewTicker(time.Duration(storeInterval) * time.Second)
-	go saveMetrics(saveMemTicker, memService)
+	go func() {
+		for _ = range saveMemTicker.C {
+			err := memService.Save()
+			if err != nil {
+				logger.Log.Error("save metrics", zap.Error(err))
+			}
+		}
+	}()
 	var err error
 	err = multierr.Append(err, logger.Initialize(runLog))
 	logger.Log.Info(fmt.Sprintf("Running server on %s log level %s", runAddr, runLog))
@@ -24,14 +31,4 @@ func main() {
 		panic(err)
 	}
 
-}
-
-func saveMetrics(saveMemTicker *time.Ticker, memService *repositories.MemStorageService) {
-	for {
-		select {
-		case <-saveMemTicker.C:
-			err := memService.Save()
-			logger.Log.Error("save metrics", zap.Error(err))
-		}
-	}
 }
