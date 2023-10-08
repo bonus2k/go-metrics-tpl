@@ -16,10 +16,10 @@ func main() {
 	memService := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics)
 	saveMemTicker := time.NewTicker(time.Duration(storeInterval) * time.Second)
 	go func() {
-		for _ = range saveMemTicker.C {
+		for range saveMemTicker.C {
 			err := memService.Save()
 			if err != nil {
-				logger.Log.Error("save metrics", zap.Error(err))
+				logger.Log.Error("save metrics ", zap.Error(err))
 			}
 		}
 	}()

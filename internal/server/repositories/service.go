@@ -22,7 +22,7 @@ func NewMemStorageService(interval int, path string, restore bool) *MemStorageSe
 	if service.file == nil {
 		dir, _ := path2.Split(path)
 		os.Mkdir(path2.Dir(dir), 0644)
-		file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+		file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
 			logger.Log.Error("", zap.Error(err))
 			panic(err)
@@ -48,6 +48,8 @@ func (ms MemStorageService) Save() error {
 	if run.After(time.Now()) || len(mem.GetAllMetrics()) == 0 {
 		return nil
 	}
+	ms.file.Truncate(0)
+	ms.file.Seek(0, 0)
 	err := ms.encoder.Encode(mem)
 	if err != nil {
 		return err
