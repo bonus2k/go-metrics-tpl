@@ -15,7 +15,7 @@ var runRestoreMetrics bool
 
 func parseFlags() error {
 	flag.StringVar(&runAddr, "a", "localhost:8080", "address and port to run server")
-	flag.StringVar(&runLog, "l", "debug", "log level")
+	flag.StringVar(&runLog, "l", "info", "log level")
 	flag.IntVar(&storeInterval, "i", 300, "metrics saving interval")
 	flag.StringVar(&fileStore, "f", "/tmp/metrics-db.json", "file path for saving metrics")
 	flag.BoolVar(&runRestoreMetrics, "r", true, "restore metrics")

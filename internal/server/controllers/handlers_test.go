@@ -12,6 +12,7 @@ import (
 
 func TestCounterPage(t *testing.T) {
 	server := httptest.NewServer(MetricsRouter())
+	InitMemStorage(false)
 	defer server.Close()
 	type want struct {
 		contentType string
@@ -67,6 +68,7 @@ func TestCounterPage(t *testing.T) {
 
 func TestGaugePage(t *testing.T) {
 	server := httptest.NewServer(MetricsRouter())
+	InitMemStorage(false)
 	defer server.Close()
 	type want struct {
 		contentType string
@@ -115,6 +117,7 @@ func TestGaugePage(t *testing.T) {
 
 func TestGetValue(t *testing.T) {
 	server := httptest.NewServer(MetricsRouter())
+	InitMemStorage(false)
 	defer server.Close()
 	type want struct {
 		contentType string
@@ -158,7 +161,7 @@ func TestGetValue(t *testing.T) {
 			want:    want{contentType: "", statusCode: 404},
 		},
 	}
-	storage := repositories.NewMemStorage()
+	storage := repositories.NewMemStorage(false)
 	storage.AddGauge("aGauge", 100)
 	storage.AddCounter("aCount", 999)
 	for _, tt := range tests {
@@ -174,6 +177,7 @@ func TestGetValue(t *testing.T) {
 
 func TestAllMetrics(t *testing.T) {
 	server := httptest.NewServer(MetricsRouter())
+	InitMemStorage(false)
 	defer server.Close()
 	type want struct {
 		contentType string
@@ -199,7 +203,7 @@ func TestAllMetrics(t *testing.T) {
 			want:    want{contentType: "", statusCode: 405},
 		},
 	}
-	storage := repositories.NewMemStorage()
+	storage := repositories.NewMemStorage(false)
 	storage.AddGauge("aGauge", 100)
 	storage.AddCounter("aCount", 999)
 	for _, tt := range tests {
