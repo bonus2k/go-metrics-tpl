@@ -15,12 +15,12 @@ func main() {
 		panic(err)
 	}
 
-	memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics)
+	err := controllers.InitMemStorage(storeInterval == 0)
 	if err != nil {
 		panic(err)
 	}
 
-	err = controllers.InitMemStorage(storeInterval == 0)
+	memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics)
 	if err != nil {
 		panic(err)
 	}
