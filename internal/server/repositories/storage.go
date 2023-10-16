@@ -6,6 +6,7 @@ import (
 )
 
 var mem MemStorage
+var sync bool
 
 type MemStorageImpl struct {
 	Gauge   map[string]float64
@@ -17,8 +18,9 @@ type Metric struct {
 	Value string
 }
 
-func NewMemStorage() MemStorage {
+func NewMemStorage(syncSave bool) MemStorage {
 	if mem == nil {
+		sync = syncSave
 		mem = &MemStorageImpl{Gauge: make(map[string]float64), Counter: make(map[string]int64)}
 	}
 	return mem
@@ -27,6 +29,10 @@ func NewMemStorage() MemStorage {
 func (ms *MemStorageImpl) AddGauge(name string, value float64) {
 	trimName := strings.TrimSpace(name)
 	ms.Gauge[trimName] = value
+	if sync {
+		fileService.Save()
+	}
+
 }
 
 func (ms *MemStorageImpl) GetGauge(name string) (float64, bool) {
@@ -42,6 +48,9 @@ func (ms *MemStorageImpl) AddCounter(name string, value int64) {
 		ms.Counter[trimName] = int64s + value
 	} else {
 		ms.Counter[trimName] = value
+	}
+	if sync {
+		fileService.Save()
 	}
 }
 

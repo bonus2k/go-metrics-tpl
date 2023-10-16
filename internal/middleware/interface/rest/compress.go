@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"strings"
@@ -20,28 +21,34 @@ var contentIsCompressed = []string{
 }
 
 func GzipReqCompression(c *resty.Client, r *http.Request) error {
-	if r.Body != nil && isPayloadSupported(r.Header) {
-		var buf bytes.Buffer
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			return err
-		}
-
-		gzipw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-		if err != nil {
-			return err
-		}
-
-		_, err = gzipw.Write(body)
-		if err != nil {
-			return err
-		}
-
-		gzipw.Close()
-		r.ContentLength = int64(buf.Len())
-		r.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
-		c.Header.Add(m.KeyContentEncoding, m.TypeEncodingContent)
+	if r.Body == nil || !isPayloadSupported(r.Header) {
+		return nil
 	}
+
+	var buf bytes.Buffer
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return errors.Wrap(err, "create gzip writer")
+	}
+
+	gzipw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	if err != nil {
+		return errors.Wrap(err, "level compression is invalid")
+	}
+
+	_, err = gzipw.Write(body)
+	if err != nil {
+		return errors.Wrap(err, "can't write in body")
+	}
+
+	err = gzipw.Close()
+	if err != nil {
+		return errors.Wrap(err, "can't close gzip io")
+	}
+	r.ContentLength = int64(buf.Len())
+	r.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
+	c.Header.Add(m.KeyContentEncoding, m.TypeEncodingContent)
+
 	return nil
 }
 

@@ -3,13 +3,14 @@ package repositories
 import (
 	"encoding/json"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	"go.uber.org/zap"
+	"github.com/pkg/errors"
+	"io/fs"
 	"os"
 	path2 "path"
 	"time"
 )
 
-var service MemStorageService
+var fileService MemStorageService
 
 type MemStorageService struct {
 	interval int
@@ -18,14 +19,17 @@ type MemStorageService struct {
 	encoder  *json.Encoder
 }
 
-func NewMemStorageService(interval int, path string, restore bool) *MemStorageService {
-	if service.file == nil {
+func NewMemStorageService(interval int, path string, restore bool) (*MemStorageService, error) {
+	if fileService.file == nil {
 		dir, _ := path2.Split(path)
-		os.Mkdir(path2.Dir(dir), 0644)
+
+		err := os.Mkdir(path2.Dir(dir), 0644)
+		if err != nil && !errors.Is(err, fs.ErrExist) {
+			return nil, errors.Wrap(err, "can't create directory")
+		}
 		file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
-			logger.Log.Error("", zap.Error(err))
-			panic(err)
+			return nil, errors.Wrap(err, "can't open file")
 		}
 
 		ms := &MemStorageService{
@@ -38,9 +42,9 @@ func NewMemStorageService(interval int, path string, restore bool) *MemStorageSe
 		if restore {
 			ms.loadMem()
 		}
-		service = *ms
+		fileService = *ms
 	}
-	return &service
+	return &fileService, nil
 }
 
 func (ms MemStorageService) Save() error {

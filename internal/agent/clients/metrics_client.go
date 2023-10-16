@@ -5,6 +5,7 @@ import (
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"strconv"
 )
@@ -15,7 +16,7 @@ type Connect struct {
 	Client   resty.Client
 }
 
-func (con *Connect) SendToGauge(mm map[string]string) {
+func (con *Connect) SendToGauge(mm map[string]string) error {
 	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
 	for k, v := range mm {
 		value, err := strconv.ParseFloat(v, 64)
@@ -31,11 +32,11 @@ func (con *Connect) SendToGauge(mm map[string]string) {
 				Value: &value,
 			}).
 			Post(address)
-
 		if err != nil {
-			logger.Log.Error("[SendToCounter]", zap.Error(err))
+			return errors.Wrap(err, "[SendToGauge]")
 		}
 	}
+	return nil
 }
 
 func (con *Connect) SendToCounter(name string, value int64) {

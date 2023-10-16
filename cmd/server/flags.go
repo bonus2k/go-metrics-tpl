@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/pkg/errors"
 	"os"
 	"strconv"
 )
@@ -12,9 +13,9 @@ var storeInterval int
 var fileStore string
 var runRestoreMetrics bool
 
-func parseFlags() {
+func parseFlags() error {
 	flag.StringVar(&runAddr, "a", "localhost:8080", "address and port to run server")
-	flag.StringVar(&runLog, "l", "info", "log level")
+	flag.StringVar(&runLog, "l", "debug", "log level")
 	flag.IntVar(&storeInterval, "i", 300, "metrics saving interval")
 	flag.StringVar(&fileStore, "f", "/tmp/metrics-db.json", "file path for saving metrics")
 	flag.BoolVar(&runRestoreMetrics, "r", true, "restore metrics")
@@ -23,16 +24,22 @@ func parseFlags() {
 		runAddr = envRunAddr
 	}
 	if envStoreInterval := os.Getenv("STORE_INTERVAL"); envStoreInterval != "" {
-		storeInterval, _ = strconv.Atoi(envStoreInterval)
+		var err error
+		storeInterval, err = strconv.Atoi(envStoreInterval)
+		if err != nil {
+			return errors.Wrap(err, "STORE_INTERVAL is not correct")
+		}
 	}
 	if envFileStore := os.Getenv("FILE_STORAGE_PATH"); envFileStore != "" {
 		fileStore = envFileStore
 	}
 	if envRunRestoreMetrics := os.Getenv("RESTORE"); envRunRestoreMetrics != "" {
 		b, err := strconv.ParseBool(envRunRestoreMetrics)
-		if err == nil {
-			runRestoreMetrics = b
+		if err != nil {
+			return errors.Wrap(err, "RESTORE is not correct")
 		}
+		runRestoreMetrics = b
 	}
 
+	return nil
 }

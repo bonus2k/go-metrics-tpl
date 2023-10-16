@@ -7,6 +7,7 @@ import (
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/go-resty/resty/v2"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -35,7 +36,10 @@ func report(mapMetrics *map[string]string) func() {
 	logger.Log.Info(fmt.Sprintf("Connect to server %s, report interval=%d, poll interval=%d", connectAddr, reportInterval, pollInterval))
 	return func() {
 		services.AddRandomValue(*m)
-		client.SendToGauge(*m)
+		err := client.SendToGauge(*m)
+		if err != nil {
+			logger.Log.Error("can't send gauge metric", zap.Error(err))
+		}
 		client.SendToCounter("PollCount", count())
 	}
 }

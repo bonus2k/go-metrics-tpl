@@ -14,9 +14,6 @@ import (
 )
 
 func SaveMetric(w http.ResponseWriter, r *http.Request) {
-	if MemStorage == nil {
-		panic("storage not initialized")
-	}
 	logger.Log.Debug("decoding request")
 	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
@@ -28,13 +25,13 @@ func SaveMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(m.KeyContentType, m.TypeJSONContent)
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
-		logger.Log.Info("save", zap.Any("gauge", metric))
+		logger.Log.Debug("save", zap.Any("gauge", metric))
 		MemStorage.AddGauge(metric.ID, *metric.Value)
 	case "counter":
-		logger.Log.Info("save", zap.Any("counter", metric))
+		logger.Log.Debug("save", zap.Any("counter", metric))
 		MemStorage.AddCounter(metric.ID, *metric.Delta)
 	default:
-		logger.Log.Info("default", zap.Any("metric", metric))
+		logger.Log.Debug("default", zap.Any("metric", metric))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -46,9 +43,6 @@ func SaveMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMetric(w http.ResponseWriter, r *http.Request) {
-	if MemStorage == nil {
-		panic("storage not initialized")
-	}
 	logger.Log.Debug("decoding request")
 	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
@@ -86,10 +80,6 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func CounterPage(w http.ResponseWriter, r *http.Request) {
-	if MemStorage == nil {
-		panic("storage not initialized")
-	}
-
 	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")
@@ -105,10 +95,6 @@ func CounterPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func GaugePage(w http.ResponseWriter, r *http.Request) {
-	if MemStorage == nil {
-		panic("storage not initialized")
-	}
-
 	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")

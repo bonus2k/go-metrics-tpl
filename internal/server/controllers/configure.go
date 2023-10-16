@@ -5,13 +5,18 @@ import (
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"github.com/go-chi/chi/v5"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
 var MemStorage repositories.MemStorage
 
-func init() {
-	MemStorage = repositories.NewMemStorage()
+func InitMemStorage(syncSave bool) error {
+	MemStorage = repositories.NewMemStorage(syncSave)
+	if MemStorage == nil {
+		return errors.New("can't initializing mem storage")
+	}
+	return nil
 }
 
 func MetricsRouter() chi.Router {
