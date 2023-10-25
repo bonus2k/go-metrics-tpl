@@ -19,7 +19,7 @@ func main() {
 	if err := storage.CheckConnection(); err != nil {
 		panic(err)
 	}
-	dbStorage, err := repositories.NewDbStorage(dbConn)
+	dbStorage, err := repositories.NewDBStorage(dbConn)
 	if err != nil {
 		logger.Log.Error("connect to db", zap.Error(err))
 	}

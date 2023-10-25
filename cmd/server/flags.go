@@ -42,8 +42,8 @@ func parseFlags() error {
 		}
 		runRestoreMetrics = b
 	}
-	if envDbConn := os.Getenv("DATABASE_DSN"); envDbConn != "" {
-		dbConn = envDbConn
+	if envDBConn := os.Getenv("DATABASE_DSN"); envDBConn != "" {
+		dbConn = envDBConn
 	}
 
 	return nil

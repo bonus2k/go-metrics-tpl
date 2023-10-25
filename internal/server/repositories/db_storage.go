@@ -9,48 +9,48 @@ import (
 
 var db Storage
 
-type DbStorageImpl struct {
+type DBStorageImpl struct {
 	db *sql.DB
 }
 
-func NewDbStorage(connect string) (*Storage, error) {
+func NewDBStorage(connect string) (*Storage, error) {
 	if db == nil {
 		dataBase, err := sql.Open("pgx", connect)
 		if err != nil {
 			return nil, err
 		}
-		db = &DbStorageImpl{db: dataBase}
+		db = &DBStorageImpl{db: dataBase}
 	}
 
 	return &db, nil
 }
 
-func (d *DbStorageImpl) AddGauge(s string, f float64) {
+func (d *DBStorageImpl) AddGauge(s string, f float64) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *DbStorageImpl) GetGauge(s string) (float64, bool) {
+func (d *DBStorageImpl) GetGauge(s string) (float64, bool) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *DbStorageImpl) AddCounter(s string, i int64) {
+func (d *DBStorageImpl) AddCounter(s string, i int64) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *DbStorageImpl) GetCounter(s string) (int64, bool) {
+func (d *DBStorageImpl) GetCounter(s string) (int64, bool) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *DbStorageImpl) GetAllMetrics() []Metric {
+func (d *DBStorageImpl) GetAllMetrics() []Metric {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (d *DbStorageImpl) CheckConnection() error {
+func (d *DBStorageImpl) CheckConnection() error {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancelFunc()
 	return d.db.PingContext(ctx)
