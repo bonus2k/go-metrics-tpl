@@ -144,7 +144,7 @@ func TestMemStorageImpl_GetGauge(t *testing.T) {
 func TestNewMemStorage(t *testing.T) {
 	tests := []struct {
 		name string
-		want MemStorage
+		want Storage
 	}{
 		{
 			name: "test mem storage",
@@ -156,7 +156,7 @@ func TestNewMemStorage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewMemStorage(false)
+			got := *NewMemStorage(false)
 			assert.Equal(t, got, tt.want)
 		})
 	}

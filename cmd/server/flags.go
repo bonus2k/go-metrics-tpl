@@ -12,10 +12,12 @@ var runLog string
 var storeInterval int
 var fileStore string
 var runRestoreMetrics bool
+var dbConn string
 
 func parseFlags() error {
 	flag.StringVar(&runAddr, "a", "localhost:8080", "address and port to run server")
 	flag.StringVar(&runLog, "l", "info", "log level")
+	flag.StringVar(&dbConn, "d", "host=127.0.0.1 user=user password=user dbname=mydb sslmode=disable", "database name and connection information")
 	flag.IntVar(&storeInterval, "i", 300, "metrics saving interval")
 	flag.StringVar(&fileStore, "f", "/tmp/metrics-db.json", "file path for saving metrics")
 	flag.BoolVar(&runRestoreMetrics, "r", true, "restore metrics")
@@ -39,6 +41,9 @@ func parseFlags() error {
 			return errors.Wrap(err, "RESTORE is not correct")
 		}
 		runRestoreMetrics = b
+	}
+	if envDbConn := os.Getenv("DATABASE_DSN"); envDbConn != "" {
+		dbConn = envDbConn
 	}
 
 	return nil

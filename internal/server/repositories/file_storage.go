@@ -17,9 +17,10 @@ type MemStorageService struct {
 	lastSave time.Time
 	file     *os.File
 	encoder  *json.Encoder
+	mem      *Storage
 }
 
-func NewMemStorageService(interval int, path string, restore bool) (*MemStorageService, error) {
+func NewMemStorageService(interval int, path string, restore bool, mem *Storage) (*MemStorageService, error) {
 	if fileService.file == nil {
 		dir, _ := path2.Split(path)
 
@@ -37,6 +38,7 @@ func NewMemStorageService(interval int, path string, restore bool) (*MemStorageS
 			lastSave: time.Now(),
 			file:     file,
 			encoder:  json.NewEncoder(file),
+			mem:      mem,
 		}
 
 		if restore {
@@ -65,6 +67,6 @@ func (ms MemStorageService) Save() error {
 
 func (ms MemStorageService) loadMem() {
 	decoder := json.NewDecoder(ms.file)
-	decoder.Decode(&mem)
+	decoder.Decode(ms.mem)
 	logger.Log.Info("load mem storage")
 }

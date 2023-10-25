@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"io"
@@ -13,7 +14,15 @@ import (
 	"strings"
 )
 
-func SaveMetric(w http.ResponseWriter, r *http.Request) {
+type controller struct {
+	mem repositories.Storage
+}
+
+func NewController(mem *repositories.Storage) *controller {
+	return &controller{mem: *mem}
+}
+
+func (c *controller) SaveMetric(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
@@ -26,10 +35,10 @@ func SaveMetric(w http.ResponseWriter, r *http.Request) {
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
 		logger.Log.Debug("save", zap.Any("gauge", metric))
-		MemStorage.AddGauge(metric.ID, *metric.Value)
+		c.mem.AddGauge(metric.ID, *metric.Value)
 	case "counter":
 		logger.Log.Debug("save", zap.Any("counter", metric))
-		MemStorage.AddCounter(metric.ID, *metric.Delta)
+		c.mem.AddCounter(metric.ID, *metric.Delta)
 	default:
 		logger.Log.Debug("default", zap.Any("metric", metric))
 		w.WriteHeader(http.StatusBadRequest)
@@ -42,7 +51,7 @@ func SaveMetric(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetMetric(w http.ResponseWriter, r *http.Request) {
+func (c *controller) GetMetric(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
@@ -56,13 +65,13 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(m.KeyContentType, m.TypeJSONContent)
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
-		gauge, ok := MemStorage.GetGauge(metric.ID)
+		gauge, ok := c.mem.GetGauge(metric.ID)
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 		}
 		metric.Value = &gauge
 	case "counter":
-		counter, ok := MemStorage.GetCounter(metric.ID)
+		counter, ok := c.mem.GetCounter(metric.ID)
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -79,7 +88,7 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("sending HTTP 200 response")
 }
 
-func CounterPage(w http.ResponseWriter, r *http.Request) {
+func (c *controller) CounterPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")
@@ -88,13 +97,13 @@ func CounterPage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else {
-		MemStorage.AddCounter(name, num)
+		c.mem.AddCounter(name, num)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 }
 
-func GaugePage(w http.ResponseWriter, r *http.Request) {
+func (c *controller) GaugePage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")
@@ -104,16 +113,16 @@ func GaugePage(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	MemStorage.AddGauge(name, num)
+	c.mem.AddGauge(name, num)
 	w.WriteHeader(http.StatusOK)
 }
 
-func GetValue(w http.ResponseWriter, r *http.Request) {
+func (c *controller) GetValue(w http.ResponseWriter, r *http.Request) {
 	typeV := chi.URLParam(r, "type")
 	name := chi.URLParam(r, "name")
 	switch typeV {
 	case "gauge":
-		if gauge, ok := MemStorage.GetGauge(name); !ok {
+		if gauge, ok := c.mem.GetGauge(name); !ok {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
@@ -123,7 +132,7 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	case "counter":
-		if counter, ok := MemStorage.GetCounter(name); !ok {
+		if counter, ok := c.mem.GetCounter(name); !ok {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
@@ -137,12 +146,20 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func AllMetrics(w http.ResponseWriter, r *http.Request) {
-	metrics := MemStorage.GetAllMetrics()
+func (c *controller) AllMetrics(w http.ResponseWriter, r *http.Request) {
+	metrics := c.mem.GetAllMetrics()
 	marshal, _ := json.Marshal(metrics)
 	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	_, err := w.Write(marshal)
 	if err != nil {
 		logger.Log.Error("[AllMetrics]", zap.Error(err))
 	}
+}
+
+func (c *controller) Ping(w http.ResponseWriter, r *http.Request) {
+	if err := c.mem.CheckConnection(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }

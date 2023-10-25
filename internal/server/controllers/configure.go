@@ -5,21 +5,12 @@ import (
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"github.com/go-chi/chi/v5"
-	"github.com/pkg/errors"
 	"net/http"
 )
 
-var MemStorage repositories.MemStorage
-
-func InitMemStorage(syncSave bool) error {
-	MemStorage = repositories.NewMemStorage(syncSave)
-	if MemStorage == nil {
-		return errors.New("can't initializing mem storage")
-	}
-	return nil
-}
-
-func MetricsRouter() chi.Router {
+func MetricsRouter(mem ...*repositories.Storage) chi.Router {
+	ctrl := NewController(mem[0])
+	ctrlDb := NewController(mem[1])
 	router := chi.NewRouter()
 	router.Use(
 		logger.MiddlewareLog,
@@ -27,8 +18,8 @@ func MetricsRouter() chi.Router {
 		rest.GzipResCompression,
 	)
 	router.Route("/update", func(r chi.Router) {
-		r.Post("/gauge/{name}/{value}", GaugePage)
-		r.Post("/counter/{name}/{value}", CounterPage)
+		r.Post("/gauge/{name}/{value}", ctrl.GaugePage)
+		r.Post("/counter/{name}/{value}", ctrl.CounterPage)
 		r.Post("/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusBadRequest)
 		})
@@ -40,9 +31,10 @@ func MetricsRouter() chi.Router {
 		})
 
 	})
-	router.Post("/update/", SaveMetric)
-	router.Post("/value/", GetMetric)
-	router.Get("/", AllMetrics)
-	router.Get("/value/{type}/{name}", GetValue)
+	router.Post("/update/", ctrl.SaveMetric)
+	router.Post("/value/", ctrl.GetMetric)
+	router.Get("/", ctrl.AllMetrics)
+	router.Get("/ping/", ctrlDb.Ping)
+	router.Get("/value/{type}/{name}", ctrl.GetValue)
 	return router
 }

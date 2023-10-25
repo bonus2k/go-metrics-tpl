@@ -15,12 +15,16 @@ func main() {
 		panic(err)
 	}
 
-	err := controllers.InitMemStorage(storeInterval == 0)
-	if err != nil {
+	storage := *repositories.NewMemStorage(storeInterval == 0)
+	if err := storage.CheckConnection(); err != nil {
 		panic(err)
 	}
+	dbStorage, err := repositories.NewDbStorage(dbConn)
+	if err != nil {
+		logger.Log.Error("connect to db", zap.Error(err))
+	}
 
-	memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics)
+	memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics, &storage)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +47,7 @@ func main() {
 	}
 	logger.Log.Info(fmt.Sprintf("Running server on %s log level %s", runAddr, runLog))
 
-	err = http.ListenAndServe(runAddr, controllers.MetricsRouter())
+	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(&storage, dbStorage))
 	if err != nil {
 		panic(err)
 	}
