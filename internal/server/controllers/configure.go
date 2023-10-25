@@ -10,7 +10,11 @@ import (
 
 func MetricsRouter(mem ...*repositories.Storage) chi.Router {
 	ctrl := NewController(mem[0])
-	ctrlDb := NewController(mem[1])
+	var ctrlDb *controller
+	if len(mem) > 1 {
+		ctrlDb = NewController(mem[1])
+	}
+
 	router := chi.NewRouter()
 	router.Use(
 		logger.MiddlewareLog,
