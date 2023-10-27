@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/pkg/errors"
@@ -51,7 +52,7 @@ func NewMemStorageService(interval int, path string, restore bool, mem *Storage)
 
 func (ms MemStorageService) Save() error {
 	run := ms.lastSave.Add(time.Duration(ms.interval) * time.Second)
-	metrics, err := mem.GetAllMetrics(nil)
+	metrics, err := mem.GetAllMetrics(context.TODO())
 	if err != nil {
 		return err
 	}

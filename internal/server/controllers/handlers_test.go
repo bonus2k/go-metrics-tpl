@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -162,8 +163,8 @@ func TestGetValue(t *testing.T) {
 		},
 	}
 
-	storage.AddGauge(nil, "aGauge", 100)
-	storage.AddCounter(nil, "aCount", 999)
+	storage.AddGauge(context.TODO(), "aGauge", 100)
+	storage.AddCounter(context.TODO(), "aCount", 999)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, body := testRequest(t, server, tt.method, tt.request)
@@ -204,8 +205,8 @@ func TestAllMetrics(t *testing.T) {
 		},
 	}
 
-	storage.AddGauge(nil, "aGauge", 100)
-	storage.AddCounter(nil, "aCount", 999)
+	storage.AddGauge(context.TODO(), "aGauge", 100)
+	storage.AddCounter(context.TODO(), "aCount", 999)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, body := testRequest(t, server, tt.method, tt.request)

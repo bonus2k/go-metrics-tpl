@@ -51,6 +51,9 @@ func establishConnection(db *sql.DB) error {
 
 func migrateSQL(db *sql.DB) error {
 	driver, err := mpgx.WithInstance(db, &mpgx.Config{})
+	if err != nil {
+		return err
+	}
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://internal/server/migrations/sql",
 		"pgx", driver)

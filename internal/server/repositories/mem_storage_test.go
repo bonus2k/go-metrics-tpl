@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -35,7 +36,7 @@ func TestMemStorageImpl_AddCounter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms.AddCounter(nil, tt.args.name, tt.args.value)
+			ms.AddCounter(context.TODO(), tt.args.name, tt.args.value)
 			got := ms.Counter[tt.args.name]
 			assert.Equal(t, tt.args.want, got)
 		})
@@ -75,7 +76,7 @@ func TestMemStorageImpl_AddGauge(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms.AddGauge(nil, tt.args.name, tt.args.value)
+			ms.AddGauge(context.TODO(), tt.args.name, tt.args.value)
 			got := ms.Gauge[tt.args.name]
 			assert.Equal(t, tt.args.want, got)
 		})
@@ -106,7 +107,7 @@ func TestMemStorageImpl_GetCounter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms.Counter[tt.args.name] = tt.args.value
-			got, _ := ms.GetCounter(nil, tt.args.name)
+			got, _ := ms.GetCounter(context.TODO(), tt.args.name)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -135,7 +136,7 @@ func TestMemStorageImpl_GetGauge(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms.Gauge[tt.args.name] = tt.args.value
-			got, _ := ms.GetGauge(nil, tt.args.name)
+			got, _ := ms.GetGauge(context.TODO(), tt.args.name)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -187,7 +188,7 @@ func TestMemStorageImpl_GetAllMetrics(t *testing.T) {
 				Gauge:   tt.fields.gauge,
 				Counter: tt.fields.counter,
 			}
-			metrics, _ := ms.GetAllMetrics(nil)
+			metrics, _ := ms.GetAllMetrics(context.TODO())
 			assert.Equalf(t, tt.want, metrics, "GetAllMetrics()")
 		})
 	}
