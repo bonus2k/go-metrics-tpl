@@ -8,13 +8,8 @@ import (
 	"net/http"
 )
 
-func MetricsRouter(mem ...*repositories.Storage) chi.Router {
-	ctrl := NewController(mem[0])
-	var ctrlDB *controller
-	if len(mem) > 1 {
-		ctrlDB = NewController(mem[1])
-	}
-
+func MetricsRouter(mem *repositories.Storage) chi.Router {
+	ctrl := NewController(mem)
 	router := chi.NewRouter()
 	router.Use(
 		logger.MiddlewareLog,
@@ -38,7 +33,7 @@ func MetricsRouter(mem ...*repositories.Storage) chi.Router {
 	router.Post("/update/", ctrl.SaveMetric)
 	router.Post("/value/", ctrl.GetMetric)
 	router.Get("/", ctrl.AllMetrics)
-	router.Get("/ping", ctrlDB.Ping)
+	router.Get("/ping", ctrl.Ping)
 	router.Get("/value/{type}/{name}", ctrl.GetValue)
 	return router
 }

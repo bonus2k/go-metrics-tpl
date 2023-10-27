@@ -162,8 +162,8 @@ func TestGetValue(t *testing.T) {
 		},
 	}
 
-	storage.AddGauge("aGauge", 100)
-	storage.AddCounter("aCount", 999)
+	storage.AddGauge(nil, "aGauge", 100)
+	storage.AddCounter(nil, "aCount", 999)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, body := testRequest(t, server, tt.method, tt.request)
@@ -204,8 +204,8 @@ func TestAllMetrics(t *testing.T) {
 		},
 	}
 
-	storage.AddGauge("aGauge", 100)
-	storage.AddCounter("aCount", 999)
+	storage.AddGauge(nil, "aGauge", 100)
+	storage.AddCounter(nil, "aCount", 999)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, body := testRequest(t, server, tt.method, tt.request)

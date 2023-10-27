@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/controllers"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/migrations"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"go.uber.org/zap"
 	"net/http"
@@ -15,16 +16,23 @@ func main() {
 		panic(err)
 	}
 
-	storage := *repositories.NewMemStorage(storeInterval == 0)
-	if err := storage.CheckConnection(); err != nil {
-		panic(err)
-	}
-	dbStorage, err := repositories.NewDBStorage(dbConn)
-	if err != nil {
-		logger.Log.Error("connect to db", zap.Error(err))
+	var storage *repositories.Storage
+
+	if len(dbConn) != 0 {
+		err := migrations.Start(dbConn)
+		if err != nil {
+			logger.Log.Error("error migration db", zap.Error(err))
+			panic(err)
+		}
+		storage, err = repositories.NewDBStorage(dbConn)
+		if err != nil {
+			logger.Log.Error("connect to db", zap.Error(err))
+		}
+	} else {
+		storage = repositories.NewMemStorage(storeInterval == 0)
 	}
 
-	memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics, &storage)
+	memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics, storage)
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +55,7 @@ func main() {
 	}
 	logger.Log.Info(fmt.Sprintf("Running server on %s log level %s", runAddr, runLog))
 
-	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(&storage, dbStorage))
+	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(storage))
 	if err != nil {
 		panic(err)
 	}

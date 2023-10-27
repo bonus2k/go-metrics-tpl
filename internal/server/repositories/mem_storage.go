@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -14,11 +15,6 @@ type MemStorageImpl struct {
 	Counter map[string]int64
 }
 
-type Metric struct {
-	Name  string
-	Value string
-}
-
 func NewMemStorage(syncSave bool) *Storage {
 	if mem == nil {
 		sync = syncSave
@@ -27,22 +23,25 @@ func NewMemStorage(syncSave bool) *Storage {
 	return &mem
 }
 
-func (ms *MemStorageImpl) AddGauge(name string, value float64) {
+func (ms *MemStorageImpl) AddGauge(ctx context.Context, name string, value float64) error {
 	trimName := strings.TrimSpace(name)
 	ms.Gauge[trimName] = value
 	if sync {
-		fileService.Save()
+		return fileService.Save()
 	}
-
+	return nil
 }
 
-func (ms *MemStorageImpl) GetGauge(name string) (float64, bool) {
+func (ms *MemStorageImpl) GetGauge(ctx context.Context, name string) (float64, error) {
 	trimName := strings.TrimSpace(name)
 	f, ok := ms.Gauge[trimName]
-	return f, ok
+	if !ok {
+		return f, errors.New("gauge not found")
+	}
+	return f, nil
 }
 
-func (ms *MemStorageImpl) AddCounter(name string, value int64) {
+func (ms *MemStorageImpl) AddCounter(ctx context.Context, name string, value int64) error {
 	trimName := strings.TrimSpace(name)
 	int64s, found := ms.Counter[trimName]
 	if found {
@@ -51,17 +50,21 @@ func (ms *MemStorageImpl) AddCounter(name string, value int64) {
 		ms.Counter[trimName] = value
 	}
 	if sync {
-		fileService.Save()
+		return fileService.Save()
 	}
+	return nil
 }
 
-func (ms *MemStorageImpl) GetCounter(name string) (int64, bool) {
+func (ms *MemStorageImpl) GetCounter(ctx context.Context, name string) (int64, error) {
 	trimName := strings.TrimSpace(name)
 	int64s, ok := ms.Counter[trimName]
-	return int64s, ok
+	if !ok {
+		return int64s, errors.New("counter not found")
+	}
+	return int64s, nil
 }
 
-func (ms *MemStorageImpl) GetAllMetrics() []Metric {
+func (ms *MemStorageImpl) GetAllMetrics(ctx context.Context) ([]Metric, error) {
 	var metrics []Metric
 	for k, v := range ms.Gauge {
 		metrics = append(metrics, Metric{Name: k, Value: fmt.Sprintf("%v", v)})
@@ -69,12 +72,9 @@ func (ms *MemStorageImpl) GetAllMetrics() []Metric {
 	for k, v := range ms.Counter {
 		metrics = append(metrics, Metric{Name: k, Value: fmt.Sprintf("%v", v)})
 	}
-	return metrics
+	return metrics, nil
 }
 
 func (ms *MemStorageImpl) CheckConnection() error {
-	if mem == nil {
-		return errors.New("storage of mem don't initialized")
-	}
-	return nil
+	return errors.New("connection don't initialized")
 }

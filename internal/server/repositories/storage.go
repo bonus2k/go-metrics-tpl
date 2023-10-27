@@ -1,10 +1,14 @@
 package repositories
 
+import (
+	"context"
+)
+
 type Storage interface {
-	AddGauge(string, float64)
-	GetGauge(string) (float64, bool)
-	AddCounter(string, int64)
-	GetCounter(string) (int64, bool)
-	GetAllMetrics() []Metric
+	AddGauge(context.Context, string, float64) error
+	GetGauge(context.Context, string) (float64, error)
+	AddCounter(context.Context, string, int64) error
+	GetCounter(context.Context, string) (int64, error)
+	GetAllMetrics(context.Context) ([]Metric, error)
 	CheckConnection() error
 }

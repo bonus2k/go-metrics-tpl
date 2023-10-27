@@ -51,12 +51,16 @@ func NewMemStorageService(interval int, path string, restore bool, mem *Storage)
 
 func (ms MemStorageService) Save() error {
 	run := ms.lastSave.Add(time.Duration(ms.interval) * time.Second)
-	if run.After(time.Now()) || len(mem.GetAllMetrics()) == 0 {
+	metrics, err := mem.GetAllMetrics(nil)
+	if err != nil {
+		return err
+	}
+	if run.After(time.Now()) || len(metrics) == 0 {
 		return nil
 	}
 	ms.file.Truncate(0)
 	ms.file.Seek(0, 0)
-	err := ms.encoder.Encode(mem)
+	err = ms.encoder.Encode(mem)
 	if err != nil {
 		return err
 	}

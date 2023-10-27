@@ -35,7 +35,7 @@ func TestMemStorageImpl_AddCounter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms.AddCounter(tt.args.name, tt.args.value)
+			ms.AddCounter(nil, tt.args.name, tt.args.value)
 			got := ms.Counter[tt.args.name]
 			assert.Equal(t, tt.args.want, got)
 		})
@@ -75,7 +75,7 @@ func TestMemStorageImpl_AddGauge(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms.AddGauge(tt.args.name, tt.args.value)
+			ms.AddGauge(nil, tt.args.name, tt.args.value)
 			got := ms.Gauge[tt.args.name]
 			assert.Equal(t, tt.args.want, got)
 		})
@@ -106,7 +106,7 @@ func TestMemStorageImpl_GetCounter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms.Counter[tt.args.name] = tt.args.value
-			got, _ := ms.GetCounter(tt.args.name)
+			got, _ := ms.GetCounter(nil, tt.args.name)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -135,7 +135,7 @@ func TestMemStorageImpl_GetGauge(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms.Gauge[tt.args.name] = tt.args.value
-			got, _ := ms.GetGauge(tt.args.name)
+			got, _ := ms.GetGauge(nil, tt.args.name)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -187,7 +187,8 @@ func TestMemStorageImpl_GetAllMetrics(t *testing.T) {
 				Gauge:   tt.fields.gauge,
 				Counter: tt.fields.counter,
 			}
-			assert.Equalf(t, tt.want, ms.GetAllMetrics(), "GetAllMetrics()")
+			metrics, _ := ms.GetAllMetrics(nil)
+			assert.Equalf(t, tt.want, metrics, "GetAllMetrics()")
 		})
 	}
 }
