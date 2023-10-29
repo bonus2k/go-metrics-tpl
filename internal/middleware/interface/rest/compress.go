@@ -47,7 +47,7 @@ func GzipReqCompression(c *resty.Client, r *http.Request) error {
 	}
 	r.ContentLength = int64(buf.Len())
 	r.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
-	c.Header.Add(m.KeyContentEncoding, m.TypeEncodingContent)
+	r.Header.Add(m.KeyContentEncoding, m.TypeEncodingContent)
 
 	return nil
 }
