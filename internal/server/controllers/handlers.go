@@ -26,12 +26,12 @@ func (c *controller) SaveMetrics(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	metrics := make([]m.Metrics, 0)
 	dec := json.NewDecoder(r.Body)
+	defer r.Body.Close()
 	if err := dec.Decode(&metrics); err != nil {
 		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	err := c.mem.AddMetrics(r.Context(), metrics)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
