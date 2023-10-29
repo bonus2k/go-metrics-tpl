@@ -13,7 +13,7 @@ import (
 type Connect struct {
 	Server   string
 	Protocol string
-	Client   resty.Client
+	Client   *resty.Client
 }
 
 func (con *Connect) SendBatchMetrics(listMetrics []m.Metrics) error {

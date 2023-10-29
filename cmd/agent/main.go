@@ -33,12 +33,12 @@ func main() {
 
 func batchReport(mapMetrics *map[string]string) func() {
 	count := services.GetPollCount()
-	resty := *resty.New().
+	res := resty.New().
 		SetPreRequestHook(rest.GzipReqCompression).
 		SetRetryCount(2).
 		SetRetryWaitTime(1 * time.Second).
 		SetRetryMaxWaitTime(9 * time.Second)
-	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: resty}
+	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: res}
 	logger.Log.Info(fmt.Sprintf("Connect to server %s, report interval=%d, poll interval=%d", connectAddr, reportInterval, pollInterval))
 	return func() {
 		services.AddRandomValue(*mapMetrics)
@@ -73,7 +73,7 @@ func convertGaugeToMetrics(metrics *map[string]string) ([]models.Metrics, error)
 func report(mapMetrics *map[string]string) func() {
 	m := mapMetrics
 	count := services.GetPollCount()
-	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: *resty.New().SetPreRequestHook(rest.GzipReqCompression)}
+	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: resty.New().SetPreRequestHook(rest.GzipReqCompression)}
 	logger.Log.Info(fmt.Sprintf("Connect to server %s, report interval=%d, poll interval=%d", connectAddr, reportInterval, pollInterval))
 	return func() {
 		services.AddRandomValue(*m)
