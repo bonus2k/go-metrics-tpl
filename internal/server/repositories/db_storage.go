@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"time"
 )
@@ -13,6 +14,42 @@ const t = 10 * time.Second
 
 type DBStorageImpl struct {
 	db *sql.DB
+}
+
+func (d *DBStorageImpl) AddMetrics(ctx context.Context, metrics []m.Metrics) error {
+	context, cancelFunc := context.WithTimeout(ctx, t)
+	defer cancelFunc()
+	tx, err := d.db.BeginTx(context, nil)
+	defer tx.Commit()
+	if err != nil {
+		return err
+	}
+	stmtG, err := tx.PrepareContext(context, "INSERT INTO gauge (name, value) VALUES($1,$2) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value;")
+	if err != nil {
+		return err
+	}
+	stmtC, err := tx.PrepareContext(context, "INSERT INTO count (name, value) VALUES($1,$2) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value;")
+	if err != nil {
+		return err
+	}
+
+	for _, v := range metrics {
+		switch v.MType {
+		case "counter":
+			_, err := stmtC.ExecContext(context, v.ID, v.Delta)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+		case "gauge":
+			_, err := stmtG.ExecContext(context, v.ID, v.Value)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (d *DBStorageImpl) AddGauge(ctx context.Context, s string, f float64) error {
@@ -66,11 +103,16 @@ func (d *DBStorageImpl) GetCounter(ctx context.Context, s string) (int64, error)
 func (d *DBStorageImpl) GetAllMetrics(ctx context.Context) ([]Metric, error) {
 	context, cancelFunc := context.WithTimeout(ctx, t)
 	defer cancelFunc()
-	rowsGauge, err := d.db.QueryContext(context, "SELECT name, value FROM gauge")
+	stmtG, err := d.db.PrepareContext(context, "SELECT name, value FROM gauge")
+	defer stmtG.Close()
+	stmtC, err := d.db.PrepareContext(context, "SELECT name, value FROM count")
+	defer stmtC.Close()
+
+	rowsGauge, err := stmtG.Query()
 	if err != nil {
 		return nil, err
 	}
-	rowsCount, err := d.db.QueryContext(context, "SELECT name, value FROM count")
+	rowsCount, err := stmtC.Query()
 	if err != nil {
 		return nil, err
 	}

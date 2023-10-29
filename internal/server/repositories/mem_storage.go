@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"strings"
 )
 
@@ -13,6 +14,24 @@ var sync bool
 type MemStorageImpl struct {
 	Gauge   map[string]float64
 	Counter map[string]int64
+}
+
+func (ms *MemStorageImpl) AddMetrics(ctx context.Context, metrics []m.Metrics) error {
+	for _, v := range metrics {
+		switch v.MType {
+		case "counter":
+			err := ms.AddCounter(context.TODO(), v.ID, *v.Delta)
+			if err != nil {
+				return err
+			}
+		case "gauge":
+			err := ms.AddGauge(context.TODO(), v.ID, *v.Value)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func NewMemStorage(syncSave bool) *Storage {

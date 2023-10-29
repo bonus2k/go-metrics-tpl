@@ -31,6 +31,7 @@ func MetricsRouter(mem *repositories.Storage) chi.Router {
 
 	})
 	router.Post("/update/", ctrl.SaveMetric)
+	router.Post("/updates/", ctrl.SaveMetrics)
 	router.Post("/value/", ctrl.GetMetric)
 	router.Get("/", ctrl.AllMetrics)
 	router.Get("/ping", ctrl.Ping)

@@ -16,6 +16,18 @@ type Connect struct {
 	Client   resty.Client
 }
 
+func (con *Connect) SendBatchMetrics(listMetrics []m.Metrics) error {
+	address := fmt.Sprintf("%s://%s/updates/", con.Protocol, con.Server)
+	_, err := con.Client.R().
+		SetHeader(m.KeyContentType, m.TypeJSONContent).
+		SetBody(listMetrics).
+		Post(address)
+	if err != nil {
+		return errors.Wrap(err, "[SendBatchMetrics]")
+	}
+	return nil
+}
+
 func (con *Connect) SendToGauge(mm map[string]string) error {
 	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
 	for k, v := range mm {

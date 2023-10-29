@@ -22,6 +22,24 @@ func NewController(mem *repositories.Storage) *controller {
 	return &controller{mem: *mem}
 }
 
+func (c *controller) SaveMetrics(w http.ResponseWriter, r *http.Request) {
+	logger.Log.Debug("decoding request")
+	metrics := make([]m.Metrics, 0)
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&metrics); err != nil {
+		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err := c.mem.AddMetrics(r.Context(), metrics)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func (c *controller) SaveMetric(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	var metric m.Metrics
