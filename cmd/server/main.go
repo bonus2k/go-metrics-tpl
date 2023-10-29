@@ -30,26 +30,25 @@ func main() {
 		}
 	} else {
 		storage = repositories.NewMemStorage(storeInterval == 0)
-	}
+		memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics, storage)
+		if err != nil {
+			panic(err)
+		}
 
-	memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics, storage)
-	if err != nil {
-		panic(err)
-	}
-
-	if storeInterval != 0 {
-		saveMemTicker := time.NewTicker(time.Duration(storeInterval) * time.Second)
-		go func() {
-			for range saveMemTicker.C {
-				err := memService.Save()
-				if err != nil {
-					logger.Log.Error("save metrics ", zap.Error(err))
+		if storeInterval != 0 {
+			saveMemTicker := time.NewTicker(time.Duration(storeInterval) * time.Second)
+			go func() {
+				for range saveMemTicker.C {
+					err := memService.Save()
+					if err != nil {
+						logger.Log.Error("save metrics ", zap.Error(err))
+					}
 				}
-			}
-		}()
+			}()
+		}
 	}
 
-	err = logger.Initialize(runLog)
+	err := logger.Initialize(runLog)
 	if err != nil {
 		panic(err)
 	}
