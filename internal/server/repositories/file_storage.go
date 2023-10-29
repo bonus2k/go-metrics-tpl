@@ -3,7 +3,9 @@ package repositories
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/utils"
 	"github.com/pkg/errors"
 	"io/fs"
 	"os"
@@ -43,7 +45,10 @@ func NewMemStorageService(interval int, path string, restore bool, mem *Storage)
 		}
 
 		if restore {
-			ms.loadMem()
+			err := ms.loadMem()
+			if err != nil {
+				return nil, err
+			}
 		}
 		fileService = *ms
 	}
@@ -59,19 +64,44 @@ func (ms MemStorageService) Save() error {
 	if run.After(time.Now()) || len(metrics) == 0 {
 		return nil
 	}
-	ms.file.Truncate(0)
-	ms.file.Seek(0, 0)
-	err = ms.encoder.Encode(mem)
-	if err != nil {
-		return err
+	f := func() error {
+		err := ms.file.Truncate(0)
+		if err != nil {
+			return err
+		}
+		_, err = ms.file.Seek(0, 0)
+		if err != nil {
+			return err
+		}
+		err = ms.encoder.Encode(mem)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
+	err = utils.RetryAfterError(f)
+	if err != nil {
+		return fmt.Errorf("can't save file %w", err)
+	}
+
 	ms.lastSave = time.Now()
 	logger.Log.Info("save mem storage")
 	return nil
 }
 
-func (ms MemStorageService) loadMem() {
+func (ms MemStorageService) loadMem() error {
 	decoder := json.NewDecoder(ms.file)
-	decoder.Decode(ms.mem)
+	f := func() error {
+		err := decoder.Decode(ms.mem)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	err := utils.RetryAfterError(f)
+	if err != nil {
+		return fmt.Errorf("can't load mem storage %w", err)
+	}
 	logger.Log.Info("load mem storage")
+	return nil
 }

@@ -3,7 +3,9 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
+	"github.com/bonus2k/go-metrics-tpl/internal/utils"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"time"
 )
@@ -19,6 +21,10 @@ type DBStorageImpl struct {
 func (d *DBStorageImpl) AddMetrics(ctx context.Context, metrics []m.Metrics) error {
 	context, cancelFunc := context.WithTimeout(ctx, t)
 	defer cancelFunc()
+	err := utils.RetryAfterError(d.CheckConnection)
+	if err != nil {
+		return fmt.Errorf("can't coonect to db %w", err)
+	}
 	tx, err := d.db.BeginTx(context, nil)
 	defer tx.Commit()
 	if err != nil {
@@ -55,7 +61,11 @@ func (d *DBStorageImpl) AddMetrics(ctx context.Context, metrics []m.Metrics) err
 func (d *DBStorageImpl) AddGauge(ctx context.Context, s string, f float64) error {
 	timeout, cancelFunc := context.WithTimeout(ctx, t)
 	defer cancelFunc()
-	_, err := d.db.ExecContext(
+	err := utils.RetryAfterError(d.CheckConnection)
+	if err != nil {
+		return fmt.Errorf("can't coonect to db %w", err)
+	}
+	_, err = d.db.ExecContext(
 		timeout,
 		"INSERT INTO gauge (name, value) VALUES($1,$2) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value;",
 		s, f,
@@ -67,19 +77,27 @@ func (d *DBStorageImpl) GetGauge(ctx context.Context, s string) (float64, error)
 	timeout, cancelFunc := context.WithTimeout(ctx, t)
 	defer cancelFunc()
 	var v float64
+	err := utils.RetryAfterError(d.CheckConnection)
+	if err != nil {
+		return v, fmt.Errorf("can't coonect to db %w", err)
+	}
 	row := d.db.QueryRowContext(
 		timeout,
 		"SELECT value FROM gauge WHERE name = $1",
 		s,
 	)
-	err := row.Scan(&v)
+	err = row.Scan(&v)
 	return v, err
 }
 
 func (d *DBStorageImpl) AddCounter(ctx context.Context, s string, i int64) error {
 	timeout, cancelFunc := context.WithTimeout(ctx, t)
 	defer cancelFunc()
-	_, err := d.db.ExecContext(
+	err := utils.RetryAfterError(d.CheckConnection)
+	if err != nil {
+		return fmt.Errorf("can't coonect to db %w", err)
+	}
+	_, err = d.db.ExecContext(
 		timeout,
 		"INSERT INTO count (name, value) VALUES($1,$2) ON CONFLICT (name) DO UPDATE SET value = count.value + EXCLUDED.value;",
 		s, i,
@@ -91,12 +109,16 @@ func (d *DBStorageImpl) GetCounter(ctx context.Context, s string) (int64, error)
 	timeout, cancelFunc := context.WithTimeout(ctx, t)
 	defer cancelFunc()
 	var v int64
+	err := utils.RetryAfterError(d.CheckConnection)
+	if err != nil {
+		return v, fmt.Errorf("can't coonect to db %w", err)
+	}
 	row := d.db.QueryRowContext(
 		timeout,
 		"SELECT value FROM count WHERE name = $1",
 		s,
 	)
-	err := row.Scan(&v)
+	err = row.Scan(&v)
 	return v, err
 }
 
@@ -113,6 +135,11 @@ func (d *DBStorageImpl) GetAllMetrics(ctx context.Context) ([]Metric, error) {
 		return nil, err
 	}
 	defer stmtC.Close()
+
+	err = utils.RetryAfterError(d.CheckConnection)
+	if err != nil {
+		return nil, fmt.Errorf("can't coonect to db %w", err)
+	}
 
 	rowsGauge, err := stmtG.Query()
 	if err != nil {
