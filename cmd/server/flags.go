@@ -13,17 +13,22 @@ var storeInterval int
 var fileStore string
 var runRestoreMetrics bool
 var dbConn string
+var signPass string
 
 func parseFlags() error {
 	flag.StringVar(&runAddr, "a", "localhost:8080", "address and port to run server")
 	flag.StringVar(&runLog, "l", "info", "log level")
 	flag.StringVar(&dbConn, "d", "", "database name and connection information")
+	flag.StringVar(&signPass, "k", "", "signature for HashSHA256")
 	flag.IntVar(&storeInterval, "i", 300, "metrics saving interval")
 	flag.StringVar(&fileStore, "f", "/tmp/metrics-db.json", "file path for saving metrics")
 	flag.BoolVar(&runRestoreMetrics, "r", true, "restore metrics")
 	flag.Parse()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		runAddr = envRunAddr
+	}
+	if envSignPass := os.Getenv("KEY"); envSignPass != "" {
+		signPass = envSignPass
 	}
 	if envStoreInterval := os.Getenv("STORE_INTERVAL"); envStoreInterval != "" {
 		var err error

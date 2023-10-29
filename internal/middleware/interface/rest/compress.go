@@ -87,7 +87,6 @@ func GzipResCompression(h http.Handler) http.Handler {
 			h.ServeHTTP(w, r)
 			return
 		}
-
 		gz, err := gzip.NewWriterLevel(w, gzip.BestCompression)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -96,7 +95,6 @@ func GzipResCompression(h http.Handler) http.Handler {
 		defer gz.Close()
 		w.Header().Set(m.KeyContentEncoding, m.TypeEncodingContent)
 		h.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
-
 	})
 }
 
