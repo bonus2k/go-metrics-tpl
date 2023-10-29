@@ -28,7 +28,7 @@ func (d *DBStorageImpl) AddMetrics(ctx context.Context, metrics []m.Metrics) err
 	if err != nil {
 		return err
 	}
-	stmtC, err := tx.PrepareContext(context, "INSERT INTO count (name, value) VALUES($1,$2) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value;")
+	stmtC, err := tx.PrepareContext(context, "INSERT INTO count (name, value) VALUES($1,$2) ON CONFLICT (name) DO UPDATE SET value = count.value + EXCLUDED.value;")
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (d *DBStorageImpl) AddCounter(ctx context.Context, s string, i int64) error
 	defer cancelFunc()
 	_, err := d.db.ExecContext(
 		timeout,
-		"INSERT INTO count (name, value) VALUES($1,$2) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value;",
+		"INSERT INTO count (name, value) VALUES($1,$2) ON CONFLICT (name) DO UPDATE SET value = count.value + EXCLUDED.value;",
 		s, i,
 	)
 	return err
@@ -104,8 +104,14 @@ func (d *DBStorageImpl) GetAllMetrics(ctx context.Context) ([]Metric, error) {
 	context, cancelFunc := context.WithTimeout(ctx, t)
 	defer cancelFunc()
 	stmtG, err := d.db.PrepareContext(context, "SELECT name, value FROM gauge")
+	if err != nil {
+		return nil, err
+	}
 	defer stmtG.Close()
 	stmtC, err := d.db.PrepareContext(context, "SELECT name, value FROM count")
+	if err != nil {
+		return nil, err
+	}
 	defer stmtC.Close()
 
 	rowsGauge, err := stmtG.Query()
