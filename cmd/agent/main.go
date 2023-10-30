@@ -34,10 +34,7 @@ func main() {
 
 func batchReport(mapMetrics *map[string]string, pass string) func() {
 	count := services.GetPollCount()
-	var sha256 *rest.SignSHA256
-	if pass != "" {
-		sha256 = rest.NewSignSHA256("password")
-	}
+	sha256 := rest.NewSignSHA256(pass)
 	res := resty.New().
 		SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
 			err := sha256.AddSignToReq(client, request)

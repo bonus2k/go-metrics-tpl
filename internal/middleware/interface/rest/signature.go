@@ -19,7 +19,7 @@ type SignSHA256 struct {
 }
 
 func NewSignSHA256(password string) *SignSHA256 {
-	return &SignSHA256{password: []byte(password), isActive: true}
+	return &SignSHA256{password: []byte(password), isActive: password != ""}
 }
 
 func (sign *SignSHA256) AddSignToReq(c *resty.Client, r *http.Request) error {

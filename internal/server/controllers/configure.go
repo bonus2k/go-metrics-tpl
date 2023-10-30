@@ -9,12 +9,9 @@ import (
 )
 
 func MetricsRouter(mem *repositories.Storage, pass string) chi.Router {
-	var sha256 *rest.SignSHA256
 	ctrl := NewController(mem)
 	router := chi.NewRouter()
-	if pass != "" {
-		sha256 = rest.NewSignSHA256(pass)
-	}
+	sha256 := rest.NewSignSHA256(pass)
 	router.Use(
 		rest.GzipReqDecompression,
 		rest.GzipResCompression,
