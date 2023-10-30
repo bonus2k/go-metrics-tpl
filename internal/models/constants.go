@@ -7,4 +7,5 @@ const (
 	TypeJSONContent     = "application/json"
 	TypeEncodingContent = "gzip"
 	TypeHTMLContent     = "text/html"
+	KeyHashSHA256       = "HashSHA256"
 )

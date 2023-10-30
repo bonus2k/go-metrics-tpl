@@ -9,6 +9,7 @@ import (
 	"github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
+	"net/http"
 	"strconv"
 	"time"
 )
@@ -19,7 +20,7 @@ func main() {
 	logger.Initialize(runLog)
 	reportTicker := time.NewTicker(time.Duration(reportInterval) * time.Second)
 	pollTicker := time.NewTicker(time.Duration(pollInterval) * time.Second)
-	sendReport := batchReport(&mapMetrics)
+	sendReport := batchReport(&mapMetrics, signPass)
 	for {
 		select {
 		case <-reportTicker.C:
@@ -31,10 +32,20 @@ func main() {
 
 }
 
-func batchReport(mapMetrics *map[string]string) func() {
+func batchReport(mapMetrics *map[string]string, pass string) func() {
 	count := services.GetPollCount()
+	var sha256 *rest.SignSHA256
+	if pass != "" {
+		sha256 = rest.NewSignSHA256("password")
+	}
 	res := resty.New().
-		SetPreRequestHook(rest.GzipReqCompression).
+		SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
+			err := sha256.AddSignToReq(client, request)
+			if err != nil {
+				return err
+			}
+			return rest.GzipReqCompression(client, request)
+		}).
 		SetRetryCount(2).
 		SetRetryWaitTime(1 * time.Second).
 		SetRetryMaxWaitTime(9 * time.Second)

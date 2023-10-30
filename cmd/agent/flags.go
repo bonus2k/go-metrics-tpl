@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/caarlos0/env/v9"
 	"log"
+	"os"
 	"strconv"
 )
 
@@ -11,6 +12,7 @@ var connectAddr string
 var reportInterval int
 var pollInterval int
 var runLog string
+var signPass string
 
 type config struct {
 	ConnectAddr    string `env:"ADDRESS"`
@@ -24,6 +26,7 @@ func parseFlags() {
 	flag.IntVar(&reportInterval, "r", 10, "timer of report interval for send metrics")
 	flag.IntVar(&pollInterval, "p", 2, "timer of poll interval for metrics")
 	flag.StringVar(&runLog, "l", "info", "log level")
+	flag.StringVar(&signPass, "k", "", "signature for HashSHA256")
 	flag.Parse()
 
 	opts := env.Options{
@@ -46,5 +49,7 @@ func parseFlags() {
 	if err := env.ParseWithOptions(&cfg, opts); err != nil {
 		log.Fatal(err)
 	}
-
+	if envSignPass := os.Getenv("KEY"); envSignPass != "" {
+		signPass = envSignPass
+	}
 }
