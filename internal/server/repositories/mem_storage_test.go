@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -17,26 +18,26 @@ func TestMemStorageImpl_AddCounter(t *testing.T) {
 		args args
 	}{
 		{
-			name: "test#1 add counter",
+			name: "test#1 add Counter",
 			args: args{name: "aCount", value: 5, want: 5},
 		},
 		{
-			name: "test#2 add counter",
+			name: "test#2 add Counter",
 			args: args{name: "aCount", value: 6, want: 11},
 		},
 		{
-			name: "test#3 add counter",
+			name: "test#3 add Counter",
 			args: args{name: "aCount", value: 100, want: 111},
 		},
 	}
 	ms := &MemStorageImpl{
-		gauge:   nil,
-		counter: make(map[string]int64),
+		Gauge:   nil,
+		Counter: make(map[string]int64),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms.AddCounter(tt.args.name, tt.args.value)
-			got := ms.counter[tt.args.name]
+			ms.AddCounter(context.TODO(), tt.args.name, tt.args.value)
+			got := ms.Counter[tt.args.name]
 			assert.Equal(t, tt.args.want, got)
 		})
 	}
@@ -54,29 +55,29 @@ func TestMemStorageImpl_AddGauge(t *testing.T) {
 		args args
 	}{
 		{
-			name: "test#1 add gauge",
+			name: "test#1 add Gauge",
 			args: args{name: "aGauge", value: 5.005, want: 5.005},
 		},
 		{
-			name: "test#2 add gauge",
+			name: "test#2 add Gauge",
 			args: args{name: "aGauge", value: -0.99, want: -0.99},
 		},
 		{
-			name: "test#3 add gauge",
+			name: "test#3 add Gauge",
 			args: args{name: "aGauge", value: 0, want: 0},
 		},
 		{
-			name: "test#4 add gauge",
+			name: "test#4 add Gauge",
 			args: args{name: "zGauge", value: 0.88, want: 0.88},
 		},
 	}
 	ms := &MemStorageImpl{
-		gauge: make(map[string]float64),
+		Gauge: make(map[string]float64),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms.AddGauge(tt.args.name, tt.args.value)
-			got := ms.gauge[tt.args.name]
+			ms.AddGauge(context.TODO(), tt.args.name, tt.args.value)
+			got := ms.Gauge[tt.args.name]
 			assert.Equal(t, tt.args.want, got)
 		})
 	}
@@ -100,13 +101,13 @@ func TestMemStorageImpl_GetCounter(t *testing.T) {
 		},
 	}
 	ms := &MemStorageImpl{
-		counter: make(map[string]int64),
+		Counter: make(map[string]int64),
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms.counter[tt.args.name] = tt.args.value
-			got, _ := ms.GetCounter(tt.args.name)
+			ms.Counter[tt.args.name] = tt.args.value
+			got, _ := ms.GetCounter(context.TODO(), tt.args.name)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -124,18 +125,18 @@ func TestMemStorageImpl_GetGauge(t *testing.T) {
 		want float64
 	}{
 		{
-			name: "test get gauge",
+			name: "test get Gauge",
 			args: args{name: "zGauge", value: 0.99},
 			want: 0.99,
 		},
 	}
 	ms := &MemStorageImpl{
-		gauge: make(map[string]float64),
+		Gauge: make(map[string]float64),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms.gauge[tt.args.name] = tt.args.value
-			got, _ := ms.GetGauge(tt.args.name)
+			ms.Gauge[tt.args.name] = tt.args.value
+			got, _ := ms.GetGauge(context.TODO(), tt.args.name)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -144,19 +145,19 @@ func TestMemStorageImpl_GetGauge(t *testing.T) {
 func TestNewMemStorage(t *testing.T) {
 	tests := []struct {
 		name string
-		want MemStorage
+		want Storage
 	}{
 		{
 			name: "test mem storage",
 			want: &MemStorageImpl{
-				gauge:   make(map[string]float64),
-				counter: make(map[string]int64),
+				Gauge:   make(map[string]float64),
+				Counter: make(map[string]int64),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewMemStorage()
+			got := *NewMemStorage(false)
 			assert.Equal(t, got, tt.want)
 		})
 	}
@@ -184,10 +185,11 @@ func TestMemStorageImpl_GetAllMetrics(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ms := &MemStorageImpl{
-				gauge:   tt.fields.gauge,
-				counter: tt.fields.counter,
+				Gauge:   tt.fields.gauge,
+				Counter: tt.fields.counter,
 			}
-			assert.Equalf(t, tt.want, ms.GetAllMetrics(), "GetAllMetrics()")
+			metrics, _ := ms.GetAllMetrics(context.TODO())
+			assert.Equalf(t, tt.want, metrics, "GetAllMetrics()")
 		})
 	}
 }

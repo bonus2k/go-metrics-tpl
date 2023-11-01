@@ -2,60 +2,68 @@ package clients
 
 import (
 	"fmt"
-	"io"
-	"net/http"
-	"os"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
+	"github.com/go-resty/resty/v2"
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	"strconv"
 )
 
 type Connect struct {
 	Server   string
 	Protocol string
-	Client   http.Client
+	Client   *resty.Client
 }
 
-func (con *Connect) SendToGauge(m map[string]string) ([]byte, error) {
-	defer con.Client.CloseIdleConnections()
-	var body []byte
-	var res *http.Response
-	for k, v := range m {
-		reqAddress := getAddressUpdateGauge(con, k, v)
-		req, err := http.NewRequest(http.MethodPost, reqAddress, nil)
-		if err != nil {
-			fmt.Fprintf(os.Stdout, "[SendToCounter] %v", err)
-		}
-		req.Header.Add("Content-Type", "text/plain")
-		if res, err = con.Client.Do(req); err != nil {
-			if res != nil {
-				defer res.Body.Close()
-				body, _ = io.ReadAll(res.Body)
-			}
-			return body, err
-		}
-	}
-	return nil, nil
-}
-
-func (con *Connect) SendToCounter(name string, value int64) ([]byte, error) {
-
-	defer con.Client.CloseIdleConnections()
-	reqAddress := getAddressUpdateCounter(con, name, value)
-	req, err := http.NewRequest(http.MethodPost, reqAddress, nil)
+func (con *Connect) SendBatchMetrics(listMetrics []m.Metrics) error {
+	address := fmt.Sprintf("%s://%s/updates/", con.Protocol, con.Server)
+	_, err := con.Client.R().
+		SetHeader(m.KeyContentType, m.TypeJSONContent).
+		SetBody(listMetrics).
+		Post(address)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "[SendToCounter] %v", err)
+		return errors.Wrap(err, "[SendBatchMetrics]")
 	}
-	req.Header.Add("Content-Type", "text/plain")
-	if res, err := con.Client.Do(req); res != nil && err == nil {
-		defer res.Body.Close()
-		return io.ReadAll(res.Body)
-	} else {
-		return nil, err
-	}
+	return nil
 }
 
-func getAddressUpdateGauge(con *Connect, name string, value string) string {
-	return fmt.Sprintf("%s://%s/update/gauge/%s/%s", con.Protocol, con.Server, name, value)
+func (con *Connect) SendToGauge(mm map[string]string) error {
+	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
+	for k, v := range mm {
+		value, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			logger.Log.Error("can't parse float")
+			continue
+		}
+		_, err = con.Client.R().
+			SetHeader(m.KeyContentType, m.TypeJSONContent).
+			SetBody(m.Metrics{
+				ID:    k,
+				MType: "gauge",
+				Value: &value,
+			}).
+			Post(address)
+		if err != nil {
+			return errors.Wrap(err, "[SendToGauge]")
+		}
+	}
+	return nil
 }
 
-func getAddressUpdateCounter(con *Connect, name string, value int64) string {
-	return fmt.Sprintf("%s://%s/update/counter/%s/%d", con.Protocol, con.Server, name, value)
+func (con *Connect) SendToCounter(name string, value int64) {
+
+	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
+	_, err := con.Client.R().
+		SetHeader(m.KeyContentType, m.TypeJSONContent).
+		SetBody(m.Metrics{
+			ID:    name,
+			MType: "counter",
+			Delta: &value,
+		}).
+		Post(address)
+
+	if err != nil {
+		logger.Log.Error("[SendToCounter]", zap.Error(err))
+	}
 }

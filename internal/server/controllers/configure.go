@@ -1,24 +1,27 @@
 package controllers
 
 import (
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 )
 
-var MemStorage repositories.MemStorage
-
-func init() {
-	MemStorage = repositories.NewMemStorage()
-}
-
-func MetricsRouter() chi.Router {
+func MetricsRouter(mem *repositories.Storage, pass string) chi.Router {
+	ctrl := NewController(mem)
 	router := chi.NewRouter()
-	router.Use(middleware.Logger)
+	sha256 := rest.NewSignSHA256(pass)
+	router.Use(
+		rest.GzipReqDecompression,
+		rest.GzipResCompression,
+		logger.MiddlewareLog,
+		sha256.AddSignToRes,
+		sha256.CheckSignReq,
+	)
 	router.Route("/update", func(r chi.Router) {
-		r.Post("/gauge/{name}/{value}", GaugePage)
-		r.Post("/counter/{name}/{value}", CounterPage)
+		r.Post("/gauge/{name}/{value}", ctrl.GaugePage)
+		r.Post("/counter/{name}/{value}", ctrl.CounterPage)
 		r.Post("/*", func(writer http.ResponseWriter, request *http.Request) {
 			writer.WriteHeader(http.StatusBadRequest)
 		})
@@ -30,7 +33,11 @@ func MetricsRouter() chi.Router {
 		})
 
 	})
-	router.Get("/", AllMetrics)
-	router.Get("/value/{type}/{name}", GetValue)
+	router.Post("/update/", ctrl.SaveMetric)
+	router.Post("/updates/", ctrl.SaveMetrics)
+	router.Post("/value/", ctrl.GetMetric)
+	router.Get("/", ctrl.AllMetrics)
+	router.Get("/ping", ctrl.Ping)
+	router.Get("/value/{type}/{name}", ctrl.GetValue)
 	return router
 }
