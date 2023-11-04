@@ -10,26 +10,47 @@ import (
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"net/http"
-	"strconv"
 	"time"
 )
 
 func main() {
-	mapMetrics := make(map[string]string)
 	parseFlags()
 	logger.Initialize(runLog)
-	reportTicker := time.NewTicker(time.Duration(reportInterval) * time.Second)
+	//reportTicker := time.NewTicker(time.Duration(reportInterval) * time.Second)
+	//По заданию немного не понятно как должен вести себя каждый воркер относительно
+	//таймаута reportTicker:
+	//Для каждого воркера существует свой тикер или для всех один.
+	//Если для всех один то отподает необходимость в буферезированной очереди,
+	//так как сборщик статистики упирается в блокируемую очередь
 	pollTicker := time.NewTicker(time.Duration(pollInterval) * time.Second)
-	sendReport := batchReport(&mapMetrics, signPass)
-	for {
-		select {
-		case <-reportTicker.C:
-			sendReport()
-		case <-pollTicker.C:
-			mapMetrics = services.GetMapMetrics()
-		}
-	}
+	buf := getSizeBuf(reportInterval, pollInterval)
+	resultErr := make(chan error)
+	chanelMetrics := services.NewChanelMetrics(buf, resultErr)
+	chanelMetrics.GetMetrics(pollTicker)
+	chanelMetrics.GetPSUtilMetrics(pollTicker)
+	chanelResult := chanelMetrics.GetChanelResult()
 
+	pool := services.NewPool(signPass, connectAddr)
+	for i := 0; i < rateLimitRoutines; i++ {
+		num := i
+		reportTicker := time.NewTicker(time.Duration(reportInterval) * time.Second)
+		go func() {
+			pool.BatchReport(chanelResult, resultErr, reportTicker, num)
+		}()
+	}
+	logger.Log.Info(fmt.Sprintf("Connect to server %s, report interval=%d, poll interval=%d, rate limi=%d",
+		connectAddr, reportInterval, pollInterval, rateLimitRoutines))
+	for err := range resultErr {
+		logger.Log.Error("Error poll worker send batch metrics", zap.Error(err))
+	}
+}
+
+func getSizeBuf(reportInterval int, pollInterval int) int {
+	i := reportInterval / pollInterval
+	if i < 1 {
+		i = 1
+	}
+	return i * 2
 }
 
 func batchReport(mapMetrics *map[string]string, pass string) func() {
@@ -49,8 +70,7 @@ func batchReport(mapMetrics *map[string]string, pass string) func() {
 	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: res}
 	logger.Log.Info(fmt.Sprintf("Connect to server %s, report interval=%d, poll interval=%d", connectAddr, reportInterval, pollInterval))
 	return func() {
-		services.AddRandomValue(*mapMetrics)
-		metrics, err := convertGaugeToMetrics(mapMetrics)
+		metrics, err := models.ConvertGaugeToMetrics(mapMetrics)
 		if err != nil {
 			logger.Log.Error("can't convert gauge", zap.Error(err))
 		}
@@ -65,26 +85,12 @@ func batchReport(mapMetrics *map[string]string, pass string) func() {
 	}
 }
 
-func convertGaugeToMetrics(metrics *map[string]string) ([]models.Metrics, error) {
-	listM := make([]models.Metrics, 0)
-	for k, v := range *metrics {
-		value, err := strconv.ParseFloat(v, 64)
-		if err != nil {
-			return nil, err
-		}
-		m := models.Metrics{ID: k, Value: &value, MType: "gauge"}
-		listM = append(listM, m)
-	}
-	return listM, nil
-}
-
 func report(mapMetrics *map[string]string) func() {
 	m := mapMetrics
 	count := services.GetPollCount()
 	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: resty.New().SetPreRequestHook(rest.GzipReqCompression)}
 	logger.Log.Info(fmt.Sprintf("Connect to server %s, report interval=%d, poll interval=%d", connectAddr, reportInterval, pollInterval))
 	return func() {
-		services.AddRandomValue(*m)
 		err := client.SendToGauge(*m)
 		if err != nil {
 			logger.Log.Error("can't send gauge metric", zap.Error(err))
