@@ -15,7 +15,6 @@ func main() {
 	if err := parseFlags(); err != nil {
 		panic(err)
 	}
-
 	var storage *repositories.Storage
 
 	if len(dbConn) != 0 {
@@ -54,7 +53,7 @@ func main() {
 	}
 	logger.Log.Info(fmt.Sprintf("Running server on %s log level %s", runAddr, runLog))
 
-	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(storage))
+	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(storage, signPass))
 	if err != nil {
 		panic(err)
 	}

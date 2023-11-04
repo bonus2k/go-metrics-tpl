@@ -8,13 +8,16 @@ import (
 	"net/http"
 )
 
-func MetricsRouter(mem *repositories.Storage) chi.Router {
+func MetricsRouter(mem *repositories.Storage, pass string) chi.Router {
 	ctrl := NewController(mem)
 	router := chi.NewRouter()
+	sha256 := rest.NewSignSHA256(pass)
 	router.Use(
-		logger.MiddlewareLog,
 		rest.GzipReqDecompression,
 		rest.GzipResCompression,
+		logger.MiddlewareLog,
+		sha256.AddSignToRes,
+		sha256.CheckSignReq,
 	)
 	router.Route("/update", func(r chi.Router) {
 		r.Post("/gauge/{name}/{value}", ctrl.GaugePage)
