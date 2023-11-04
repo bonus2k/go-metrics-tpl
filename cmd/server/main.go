@@ -15,7 +15,6 @@ func main() {
 	if err := parseFlags(); err != nil {
 		panic(err)
 	}
-
 	var storage *repositories.Storage
 
 	if len(dbConn) != 0 {
