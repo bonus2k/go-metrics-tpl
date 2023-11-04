@@ -87,29 +87,23 @@ func GetGoPSUtilMapMetrics() (map[string]string, error) {
 
 func (ch *ChanelMetrics) GetMetrics(ticker *time.Ticker) {
 	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				ch.outResult <- GetMapMetrics()
-				logger.Log.Info("send metrics to out chan")
-			}
+		for range ticker.C {
+			ch.outResult <- GetMapMetrics()
+			logger.Log.Info("send metrics to out chan")
 		}
 	}()
 }
 
 func (ch *ChanelMetrics) GetPSUtilMetrics(ticker *time.Ticker) {
 	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				metrics, err := GetGoPSUtilMapMetrics()
-				if err != nil {
-					ch.outError <- fmt.Errorf("can't get PSUtil metrics, %w", err)
-					break
-				}
-				ch.outResult <- metrics
-				logger.Log.Info("send PSUtil metrics to out chan")
+		for range ticker.C {
+			metrics, err := GetGoPSUtilMapMetrics()
+			if err != nil {
+				ch.outError <- fmt.Errorf("can't get PSUtil metrics, %w", err)
+				continue
 			}
+			ch.outResult <- metrics
+			logger.Log.Info("send PSUtil metrics to out chan")
 		}
 	}()
 }

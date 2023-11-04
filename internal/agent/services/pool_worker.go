@@ -41,25 +41,22 @@ func NewPool(signPass string, connectAddr string) *PoolWorcker {
 
 func (p *PoolWorcker) BatchReport(jobs <-chan map[string]string, errors chan<- error, ticker *time.Ticker, goRoutine int) {
 
-	for {
-		select {
-		case <-ticker.C:
-			m := <-jobs
-			metrics, err := models.ConvertGaugeToMetrics(&m)
-			if err != nil {
-				errors <- fmt.Errorf("can't convert gauge to metrics %w", err)
-				break
-			}
-			count := p.count()
-			metrics = append(metrics, models.Metrics{ID: "PollCount", Delta: &count, MType: "counter"})
-			err = p.client.SendBatchMetrics(metrics)
-			if err != nil {
-				//интересно какую логику подразумевает проект в отношении PollCount?
-				//если не удалось отправить сообщение, стоит ли нам делать откат счетчика на 1
-				errors <- fmt.Errorf("can't send metrics to updates %w", err)
-				break
-			}
-			logger.Log.Debug(fmt.Sprintf("goRoutine %d send count %d\n", goRoutine, count))
+	for range ticker.C {
+		m := <-jobs
+		metrics, err := models.ConvertGaugeToMetrics(&m)
+		if err != nil {
+			errors <- fmt.Errorf("can't convert gauge to metrics %w", err)
+			continue
 		}
+		count := p.count()
+		metrics = append(metrics, models.Metrics{ID: "PollCount", Delta: &count, MType: "counter"})
+		err = p.client.SendBatchMetrics(metrics)
+		if err != nil {
+			//интересно какую логику подразумевает проект в отношении PollCount?
+			//если не удалось отправить сообщение, стоит ли нам делать откат счетчика на 1
+			errors <- fmt.Errorf("goRoutine %d can't send metrics to updates %w", goRoutine, err)
+			continue
+		}
+		logger.Log.Info(fmt.Sprintf("goRoutine %d send count %d", goRoutine, count))
 	}
 }
