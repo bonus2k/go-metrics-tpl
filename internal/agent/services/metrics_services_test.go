@@ -9,22 +9,18 @@ import (
 )
 
 func TestAddRandomValue(t *testing.T) {
-	type args struct {
-		m map[string]string
-	}
+
 	tests := []struct {
 		name string
-		args args
 	}{
 		{
 			name: "add random value",
-			args: args{m: make(map[string]string)},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			AddRandomValue(tt.args.m)
-			rnd := tt.args.m["RandomValue"]
+			metrics := GetMapMetrics()
+			rnd := metrics["RandomValue"]
 			_, err := strconv.ParseFloat(rnd, 32)
 			require.NoError(t, err)
 		})
@@ -44,7 +40,7 @@ func TestGetMapMetrics(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := GetMapMetrics()
-			require.Equal(t, len(got), len(tt.want))
+			require.Equal(t, len(got), len(tt.want)+1)
 			for _, s := range tt.want {
 				_, found := got[s]
 				assert.True(t, found)
