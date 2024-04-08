@@ -23,7 +23,7 @@ func BenchmarkLogging(b *testing.B) {
 
 	b.Run("zap with format Sprintf", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			logger.Debug(fmt.Sprintf("%s \n", str))
+			logger.Debug(fmt.Sprintf("str %s \n", str))
 		}
 	})
 
@@ -47,13 +47,13 @@ func BenchmarkLogging(b *testing.B) {
 
 	b.Run("zlog with format Sprintf", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			log.Debug().Msg(fmt.Sprintf("%s", str))
+			log.Debug().Msg(fmt.Sprintf("str %s", str))
 		}
 	})
 
 	b.Run("zlog with format Msgf", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			log.Debug().Msgf("%s", str)
+			log.Debug().Msgf("str %s", str)
 		}
 	})
 }
