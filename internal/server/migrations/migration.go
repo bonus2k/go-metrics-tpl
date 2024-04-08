@@ -60,14 +60,27 @@ func establishConnection(db *sql.DB) error {
 
 func migrateSQL(db *sql.DB) error {
 	driver, err := mpgx.WithInstance(db, &mpgx.Config{})
-	defer driver.Close()
+	defer func() {
+		err = driver.Close()
+		if err != nil {
+			logger.Log.Error("migrateSQL", err)
+		}
+	}()
 	if err != nil {
 		return err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://internal/server/migrations/sql",
 		"pgx", driver)
-	defer m.Close()
+	defer func() {
+		sourceErr, databaseErr := m.Close()
+		if databaseErr != nil {
+			logger.Log.Error("databaseErr", databaseErr)
+		}
+		if sourceErr != nil {
+			logger.Log.Error("sourceErr", sourceErr)
+		}
+	}()
 	if err != nil {
 		return err
 	}

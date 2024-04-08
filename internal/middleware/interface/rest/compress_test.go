@@ -15,9 +15,17 @@ func BenchmarkGzipReqDecompression(b *testing.B) {
 	b.Run("compress with file", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			body := testCompressBody(testStr)
-			if resp, resBody := testRequest("POST", body, GzipReqDecompression); testStr != resBody && resp.StatusCode != 200 {
+			resp, resBody := testRequest("POST", body, GzipReqDecompression)
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					b.Error(err)
+				}
+			}()
+			if testStr != resBody && resp.StatusCode != 200 {
 				b.Error(resp, resBody)
 			}
+
 		}
 
 	})
@@ -25,7 +33,14 @@ func BenchmarkGzipReqDecompression(b *testing.B) {
 	b.Run("compress with reader", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			body := testCompressBody(testStr)
-			if resp, resBody := testRequest("POST", body, GzipReqDecompression1); testStr != resBody && resp.StatusCode != 200 {
+			resp, resBody := testRequest("POST", body, GzipReqDecompression1)
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					b.Error(err)
+				}
+			}()
+			if testStr != resBody && resp.StatusCode != 200 {
 				b.Error(resp, resBody)
 			}
 		}
@@ -48,8 +63,7 @@ func testRequest(method string, body io.Reader, fDecompression func(h http.Handl
 	rw := httptest.NewRecorder()
 	handler := fDecompression(testHandler)
 	handler.ServeHTTP(rw, req)
-
-	return rw.Result(), string(rw.Body.Bytes())
+	return rw.Result(), rw.Body.String()
 }
 
 func testCompressBody(body string) io.Reader {
@@ -57,7 +71,15 @@ func testCompressBody(body string) io.Reader {
 	var buf []byte
 	buffer := bytes.NewBuffer(buf)
 	gzipw, _ := gzip.NewWriterLevel(buffer, gzip.BestCompression)
-	defer gzipw.Close()
-	gzipw.Write(b)
+	defer func() {
+		err := gzipw.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	_, err := gzipw.Write(b)
+	if err != nil {
+		panic(err)
+	}
 	return buffer
 }
