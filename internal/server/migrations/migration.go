@@ -10,7 +10,6 @@ import (
 	mpgx "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"go.uber.org/zap"
 	"time"
 )
 
@@ -18,8 +17,9 @@ const migrationsPath = "file://migrations"
 
 func Start(connect string) error {
 	dataBase, err := sql.Open("pgx", connect)
+
 	if err != nil {
-		logger.Log.Error("can't open connection to db", zap.Error(err))
+		logger.Log.Error("can't open connection to db", err)
 		return fmt.Errorf("can't open connection to db %w", err)
 	}
 
@@ -38,7 +38,7 @@ func Start(connect string) error {
 	}
 	err = utils.RetryAfterError(f)
 	if err != nil {
-		logger.Log.Error("can't connected to db", zap.Error(err))
+		logger.Log.Error("can't connected to db", err)
 		return fmt.Errorf("can't connected to db %w", err)
 	}
 	err = migrateSQL(dataBase)
@@ -60,12 +60,14 @@ func establishConnection(db *sql.DB) error {
 
 func migrateSQL(db *sql.DB) error {
 	driver, err := mpgx.WithInstance(db, &mpgx.Config{})
+	defer driver.Close()
 	if err != nil {
 		return err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://internal/server/migrations/sql",
 		"pgx", driver)
+	defer m.Close()
 	if err != nil {
 		return err
 	}

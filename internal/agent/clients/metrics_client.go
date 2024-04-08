@@ -6,7 +6,6 @@ import (
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 	"strconv"
 )
 
@@ -33,7 +32,7 @@ func (con *Connect) SendToGauge(mm map[string]string) error {
 	for k, v := range mm {
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			logger.Log.Error("can't parse float")
+			logger.Log.Error("can't parse float", err)
 			continue
 		}
 		_, err = con.Client.R().
@@ -64,6 +63,6 @@ func (con *Connect) SendToCounter(name string, value int64) {
 		Post(address)
 
 	if err != nil {
-		logger.Log.Error("[SendToCounter]", zap.Error(err))
+		logger.Log.Error("[SendToCounter]", err)
 	}
 }

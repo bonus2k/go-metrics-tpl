@@ -27,11 +27,13 @@ func GzipReqCompression(c *resty.Client, r *http.Request) error {
 
 	var buf bytes.Buffer
 	body, err := io.ReadAll(r.Body)
+	defer r.Body.Close()
 	if err != nil {
 		return errors.Wrap(err, "create gzip writer")
 	}
 
 	gzipw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	defer gzipw.Close()
 	if err != nil {
 		return errors.Wrap(err, "level compression is invalid")
 	}
@@ -41,10 +43,6 @@ func GzipReqCompression(c *resty.Client, r *http.Request) error {
 		return errors.Wrap(err, "can't write in body")
 	}
 
-	err = gzipw.Close()
-	if err != nil {
-		return errors.Wrap(err, "can't close gzip io")
-	}
 	r.ContentLength = int64(buf.Len())
 	r.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 	r.Header.Add(m.KeyContentEncoding, m.TypeEncodingContent)
@@ -56,6 +54,7 @@ func GzipReqDecompression(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.Header.Get(m.KeyContentEncoding), m.TypeEncodingContent) {
 			gz, err := gzip.NewReader(r.Body)
+			defer r.Body.Close()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -67,6 +66,22 @@ func GzipReqDecompression(h http.Handler) http.Handler {
 				return
 			}
 			r.Body = io.NopCloser(bytes.NewReader(body))
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
+func GzipReqDecompression1(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.Header.Get(m.KeyContentEncoding), m.TypeEncodingContent) {
+			gz, err := gzip.NewReader(r.Body)
+			defer r.Body.Close()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer gz.Close()
+			r.Body = gz
 		}
 		h.ServeHTTP(w, r)
 	})

@@ -33,7 +33,8 @@ func NewPool(signPass string, connectAddr string) *PoolWorcker {
 		}).
 		SetRetryCount(2).
 		SetRetryWaitTime(1 * time.Second).
-		SetRetryMaxWaitTime(9 * time.Second)
+		SetRetryMaxWaitTime(9 * time.Second).
+		SetCloseConnection(true)
 	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: res}
 	pool = &PoolWorcker{client: client, count: GetPollCount()}
 	return pool
