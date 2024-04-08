@@ -51,7 +51,7 @@ func (c *controller) SaveMetric(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(m.KeyContentType, m.TypeJSONContent)
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
-		logger.Log.Debugf("save", metric)
+		logger.Log.Debugf("save gauge metric %v", metric)
 		err := c.mem.AddGauge(r.Context(), metric.ID, *metric.Value)
 		if err != nil {
 			logger.Log.Error("can't save gauge", err)
@@ -59,7 +59,7 @@ func (c *controller) SaveMetric(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case "counter":
-		logger.Log.Debugf("save", metric)
+		logger.Log.Debugf("save counter metric %v", metric)
 		err := c.mem.AddCounter(r.Context(), metric.ID, *metric.Delta)
 		if err != nil {
 			logger.Log.Error("can't save counter", err)
@@ -67,7 +67,7 @@ func (c *controller) SaveMetric(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		logger.Log.Debugf("default", metric)
+		logger.Log.Debugf("type of metrics not reconcile %v", metric)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -88,7 +88,7 @@ func (c *controller) GetMetric(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	logger.Log.Infof("get metric", metric)
+	logger.Log.Infof("got metric %v", metric)
 	w.Header().Set(m.KeyContentType, m.TypeJSONContent)
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
