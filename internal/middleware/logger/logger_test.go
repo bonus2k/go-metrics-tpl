@@ -5,7 +5,6 @@ import (
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
 	"go.uber.org/zap"
-	"log/slog"
 	"testing"
 )
 
@@ -34,11 +33,11 @@ func BenchmarkLogging(b *testing.B) {
 		}
 	})
 
-	b.Run("slog", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			slog.Debug(str)
-		}
-	})
+	//b.Run("slog", func(b *testing.B) {
+	//	for i := 0; i < b.N; i++ {
+	//		slog.Debug(str)
+	//	}
+	//})
 
 	b.Run("zlog", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
