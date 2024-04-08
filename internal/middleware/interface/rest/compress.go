@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"compress/gzip"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
@@ -27,13 +28,23 @@ func GzipReqCompression(c *resty.Client, r *http.Request) error {
 
 	var buf bytes.Buffer
 	body, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err = r.Body.Close()
+		if err != nil {
+			logger.Log.Error("GzipReqCompression", err)
+		}
+	}()
 	if err != nil {
 		return errors.Wrap(err, "create gzip writer")
 	}
 
 	gzipw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-	defer gzipw.Close()
+	defer func() {
+		err = gzipw.Close()
+		if err != nil {
+			logger.Log.Error("GzipReqCompression", err)
+		}
+	}()
 	if err != nil {
 		return errors.Wrap(err, "level compression is invalid")
 	}
@@ -54,12 +65,22 @@ func GzipReqDecompression(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.Header.Get(m.KeyContentEncoding), m.TypeEncodingContent) {
 			gz, err := gzip.NewReader(r.Body)
-			defer r.Body.Close()
+			defer func() {
+				err = r.Body.Close()
+				if err != nil {
+					logger.Log.Error("GzipReqDecompression", err)
+				}
+			}()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			defer gz.Close()
+			defer func() {
+				err = gz.Close()
+				if err != nil {
+					logger.Log.Error("GzipReqDecompression", err)
+				}
+			}()
 			body, err := io.ReadAll(gz)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -75,12 +96,22 @@ func GzipReqDecompression1(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.Header.Get(m.KeyContentEncoding), m.TypeEncodingContent) {
 			gz, err := gzip.NewReader(r.Body)
-			defer r.Body.Close()
+			defer func() {
+				err = r.Body.Close()
+				if err != nil {
+					logger.Log.Error("GzipReqDecompression", err)
+				}
+			}()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			defer gz.Close()
+			defer func() {
+				err = gz.Close()
+				if err != nil {
+					logger.Log.Error("GzipReqDecompression", err)
+				}
+			}()
 			r.Body = gz
 		}
 		h.ServeHTTP(w, r)
@@ -107,7 +138,12 @@ func GzipResCompression(h http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		defer gz.Close()
+		defer func() {
+			err = gz.Close()
+			if err != nil {
+				logger.Log.Error("GzipResCompression", err)
+			}
+		}()
 		w.Header().Set(m.KeyContentEncoding, m.TypeEncodingContent)
 		h.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
 	})

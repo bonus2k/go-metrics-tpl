@@ -25,7 +25,12 @@ func (c *controller) SaveMetrics(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	metrics := make([]m.Metrics, 0)
 	dec := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			logger.Log.Error("SaveMetrics", err)
+		}
+	}()
 	if err := dec.Decode(&metrics); err != nil {
 		logger.Log.Error("cannot decode request JSON body", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -82,7 +87,12 @@ func (c *controller) GetMetric(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			logger.Log.Error("GetMetric", err)
+		}
+	}()
 	if err := dec.Decode(&metric); err != nil {
 		logger.Log.Error("cannot decode request JSON body", err)
 		w.WriteHeader(http.StatusInternalServerError)

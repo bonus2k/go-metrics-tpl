@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/bonus2k/go-metrics-tpl/internal/utils"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -129,12 +130,22 @@ func (d *DBStorageImpl) GetAllMetrics(ctx context.Context) ([]Metric, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer stmtG.Close()
+	defer func() {
+		err = stmtG.Close()
+		if err != nil {
+			logger.Log.Error("GetAllMetrics", err)
+		}
+	}()
 	stmtC, err := d.db.PrepareContext(context, "SELECT name, value FROM count")
 	if err != nil {
 		return nil, err
 	}
-	defer stmtC.Close()
+	defer func() {
+		err = stmtC.Close()
+		if err != nil {
+			logger.Log.Error("GetAllMetrics", err)
+		}
+	}()
 
 	err = utils.RetryAfterError(d.CheckConnection)
 	if err != nil {
