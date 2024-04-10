@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/models"
 )
 

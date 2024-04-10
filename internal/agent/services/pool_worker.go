@@ -2,13 +2,14 @@ package services
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/clients"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
-	"net/http"
-	"time"
 )
 
 type PoolWorcker struct {

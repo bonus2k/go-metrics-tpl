@@ -3,13 +3,14 @@ package rest
 import (
 	"bytes"
 	"compress/gzip"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"strings"
 )
 
 var contentIsCompressed = []string{

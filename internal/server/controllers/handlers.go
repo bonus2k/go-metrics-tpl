@@ -3,14 +3,15 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	m "github.com/bonus2k/go-metrics-tpl/internal/models"
-	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
+	"github.com/go-chi/chi/v5"
 )
 
 type controller struct {

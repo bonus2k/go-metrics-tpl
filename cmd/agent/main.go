@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/bonus2k/go-metrics-tpl/internal/agent/services"
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"time"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/agent/services"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 )
 
 func main() {

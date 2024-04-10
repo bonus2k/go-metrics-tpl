@@ -1,11 +1,12 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func MetricsRouter(mem *repositories.Storage, pass string) chi.Router {

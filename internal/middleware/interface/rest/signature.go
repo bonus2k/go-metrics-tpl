@@ -6,11 +6,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	m "github.com/bonus2k/go-metrics-tpl/internal/models"
-	"github.com/go-resty/resty/v2"
 	"hash"
 	"io"
 	"net/http"
+
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
+	"github.com/go-resty/resty/v2"
 )
 
 type SignSHA256 struct {

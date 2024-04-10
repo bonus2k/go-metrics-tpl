@@ -2,11 +2,12 @@ package clients
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
-	"strconv"
 )
 
 type Connect struct {

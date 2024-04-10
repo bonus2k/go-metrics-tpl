@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/pkg/errors"
 	"os"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 var runAddr string

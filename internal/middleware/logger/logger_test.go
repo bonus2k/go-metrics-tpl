@@ -2,10 +2,11 @@ package logger
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
 	"go.uber.org/zap"
-	"testing"
 )
 
 func BenchmarkLogging(b *testing.B) {

@@ -2,10 +2,11 @@ package logger
 
 import (
 	"bytes"
-	"github.com/rs/zerolog"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type Logger interface {

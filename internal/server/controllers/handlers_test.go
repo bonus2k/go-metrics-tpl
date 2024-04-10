@@ -2,14 +2,15 @@ package controllers
 
 import (
 	"context"
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCounterPage(t *testing.T) {

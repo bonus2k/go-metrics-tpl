@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/bonus2k/go-metrics-tpl/internal/utils"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"time"
 )
 
 var db Storage

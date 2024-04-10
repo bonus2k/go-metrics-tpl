@@ -2,14 +2,15 @@ package services
 
 import (
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
 	"math/rand"
 	"reflect"
 	"runtime"
 	"sync/atomic"
 	"time"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 var memStats runtime.MemStats

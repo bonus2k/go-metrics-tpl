@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"strings"
+
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 )
 
 var mem Storage

@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/utils"
 	"github.com/golang-migrate/migrate/v4"
 	mpgx "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"time"
 )
 
 const migrationsPath = "file://migrations"

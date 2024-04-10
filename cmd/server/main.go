@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	"github.com/bonus2k/go-metrics-tpl/internal/server/controllers"
-	"github.com/bonus2k/go-metrics-tpl/internal/server/migrations"
-	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"runtime"
 	"time"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/controllers"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/migrations"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
 )
 
 func main() {
