@@ -93,10 +93,16 @@ func getMetric() func(url string) (int, []byte) {
 			panic(err)
 		}
 		resp, err := server.Client().Do(req)
-		defer resp.Body.Close()
 		if err != nil {
 			panic(err)
 		}
+		defer func() {
+			err := resp.Body.Close()
+			if err != nil {
+				panic(err)
+			}
+		}()
+
 		code := resp.StatusCode
 		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
