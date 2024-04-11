@@ -76,6 +76,12 @@ func saveMetric(url string) int {
 	if err != nil {
 		panic(err)
 	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	code := resp.StatusCode
 	return code
 }
