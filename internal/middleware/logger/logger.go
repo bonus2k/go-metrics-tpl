@@ -1,3 +1,4 @@
+// Package logger реализует интерфейс логгера
 package logger
 
 import (
@@ -59,6 +60,7 @@ func (l *loggerImpl) Panic(string string) {
 
 var Log loggerImpl
 
+// Initialize Инизиализирует логгер с заданным уровнем логирования
 func Initialize(level string) error {
 	parseLevel, err := zerolog.ParseLevel(level)
 	if err != nil {
@@ -84,6 +86,7 @@ type (
 	}
 )
 
+// MiddlewareLog логирует HTTP сессии
 func MiddlewareLog(h http.Handler) http.Handler {
 	var lw *loggingResponseWriter
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

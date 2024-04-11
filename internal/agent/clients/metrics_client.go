@@ -1,3 +1,4 @@
+// Package clients реализует интеграцию с сервисом Server
 package clients
 
 import (
@@ -10,12 +11,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Connect задает параметры для подключения к серверу
 type Connect struct {
 	Server   string
 	Protocol string
 	Client   *resty.Client
 }
 
+// SendBatchMetrics отправляет метрики на сервер пакетом
+// за одну HTTP сессию может быть пераданно более одной метрики
 func (con *Connect) SendBatchMetrics(listMetrics []m.Metrics) error {
 	address := fmt.Sprintf("%s://%s/updates/", con.Protocol, con.Server)
 	_, err := con.Client.R().
@@ -28,6 +32,9 @@ func (con *Connect) SendBatchMetrics(listMetrics []m.Metrics) error {
 	return nil
 }
 
+// SendToGauge отправляет на сервер по одной метрике Gauge
+// за одну HTTP сессию может быть пераданно не более одной метрики
+// Deprecated: используйте SendBatchMetrics если необходимо передать более одной метрики на сервер
 func (con *Connect) SendToGauge(mm map[string]string) error {
 	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)
 	for k, v := range mm {
@@ -51,6 +58,9 @@ func (con *Connect) SendToGauge(mm map[string]string) error {
 	return nil
 }
 
+// SendToCounter отправляет на сервер по одной метрике Counter
+// за одну HTTP сессию может быть пераданно не более одной метрики
+// Deprecated: используйте SendBatchMetrics если необходимо передать более одной метрики на сервер
 func (con *Connect) SendToCounter(name string, value int64) {
 
 	address := fmt.Sprintf("%s://%s/update/", con.Protocol, con.Server)

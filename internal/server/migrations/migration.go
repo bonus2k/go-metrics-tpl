@@ -1,3 +1,4 @@
+// Package migrations реализует создание таблиц в БД для работы сервиса Server
 package migrations
 
 import (

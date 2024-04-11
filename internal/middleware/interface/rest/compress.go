@@ -1,3 +1,4 @@
+// Package rest реализует middleware для сжатия и проверки cookie
 package rest
 
 import (
@@ -22,6 +23,7 @@ var contentIsCompressed = []string{
 	"text/xml",
 }
 
+// GzipReqCompression сжимает request по средствам gzip flate.BestCompression
 func GzipReqCompression(c *resty.Client, r *http.Request) error {
 	if r.Body == nil || !isPayloadSupported(r.Header) {
 		return nil
@@ -62,6 +64,7 @@ func GzipReqCompression(c *resty.Client, r *http.Request) error {
 	return nil
 }
 
+// GzipReqDecompression разархивирует request по средствам gzip flate.BestCompression
 func GzipReqDecompression(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.Header.Get(m.KeyContentEncoding), m.TypeEncodingContent) {
@@ -128,6 +131,7 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }
 
+// GzipResCompression сжимает response по средствам gzip flate.BestCompression
 func GzipResCompression(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get(m.KeyAcceptEncoding), m.TypeEncodingContent) {

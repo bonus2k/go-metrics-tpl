@@ -15,6 +15,7 @@ import (
 
 func TestCounterPage(t *testing.T) {
 	storage := repositories.NewMemStorage(false)
+	defer repositories.ResetMemStorage()
 	server := httptest.NewServer(MetricsRouter(storage, ""))
 	defer server.Close()
 	type want struct {
@@ -76,6 +77,7 @@ func TestCounterPage(t *testing.T) {
 
 func TestGaugePage(t *testing.T) {
 	storage := repositories.NewMemStorage(false)
+	defer repositories.ResetMemStorage()
 	server := httptest.NewServer(MetricsRouter(storage, ""))
 	defer server.Close()
 	type want struct {
@@ -130,6 +132,7 @@ func TestGaugePage(t *testing.T) {
 
 func TestGetValue(t *testing.T) {
 	storage := *repositories.NewMemStorage(false)
+	defer repositories.ResetMemStorage()
 	server := httptest.NewServer(MetricsRouter(&storage, ""))
 	defer server.Close()
 	type want struct {
@@ -153,7 +156,7 @@ func TestGetValue(t *testing.T) {
 			name:    "test value aCount 200",
 			request: "/value/counter/aCount",
 			method:  http.MethodGet,
-			want:    want{contentType: "text/html", statusCode: 200, body: "1099"},
+			want:    want{contentType: "text/html", statusCode: 200, body: "999"},
 		},
 		{
 			name:    "test value gauge page 404",
@@ -195,6 +198,7 @@ func TestGetValue(t *testing.T) {
 
 func TestAllMetrics(t *testing.T) {
 	storage := *repositories.NewMemStorage(false)
+	defer repositories.ResetMemStorage()
 	server := httptest.NewServer(MetricsRouter(&storage, ""))
 	defer server.Close()
 	type want struct {
@@ -212,7 +216,7 @@ func TestAllMetrics(t *testing.T) {
 			name:    "test all metrics 200",
 			request: "/",
 			method:  http.MethodGet,
-			want:    want{contentType: "text/html", statusCode: 200, body: "[{\"Name\":\"aGauge\",\"Value\":\"100\"},{\"Name\":\"aCount\",\"Value\":\"2098\"}]"},
+			want:    want{contentType: "text/html", statusCode: 200, body: "[{\"Name\":\"aGauge\",\"Value\":\"100\"},{\"Name\":\"aCount\",\"Value\":\"999\"}]"},
 		},
 		{
 			name:    "test all metrics 405",

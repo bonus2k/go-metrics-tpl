@@ -19,6 +19,7 @@ type PoolWorcker struct {
 
 var pool *PoolWorcker
 
+// NewPool создает пул worker которые собирают метрики и отправляют их на сервер
 func NewPool(signPass string, connectAddr string) *PoolWorcker {
 	if pool != nil {
 		return pool
@@ -41,6 +42,8 @@ func NewPool(signPass string, connectAddr string) *PoolWorcker {
 	return pool
 }
 
+// BatchReport осуществляет сбор метрик и их отправку в сервис Server,
+// в вслучае HTTP ошибки отправялет в канал error сообщение об ошибке
 func (p *PoolWorcker) BatchReport(jobs <-chan map[string]string, errors chan<- error, ticker *time.Ticker, goRoutine int) {
 
 	for range ticker.C {

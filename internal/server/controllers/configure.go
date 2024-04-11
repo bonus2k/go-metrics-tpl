@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// MetricsRouter создает роутер для HTTP сервера
 func MetricsRouter(mem *repositories.Storage, pass string) chi.Router {
 	ctrl := NewController(mem)
 	router := chi.NewRouter()

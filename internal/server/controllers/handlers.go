@@ -1,3 +1,4 @@
+// Package controllers реализует HTTP handler для обработки запросов от сервиса Agent и REST клиентов
 package controllers
 
 import (
@@ -18,10 +19,12 @@ type controller struct {
 	mem repositories.Storage
 }
 
+// NewController задает параметры для сохранения метрик
 func NewController(mem *repositories.Storage) *controller {
 	return &controller{mem: *mem}
 }
 
+// SaveMetrics реализует сохранение метрик переданных пакетом за одну HTTP сессию (может быть пераданно более одной метрики)
 func (c *controller) SaveMetrics(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	metrics := make([]m.Metrics, 0)

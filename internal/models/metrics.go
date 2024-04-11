@@ -1,3 +1,4 @@
+// Package models описывает схуме JSON для передачи метрик на сервер
 package models
 
 import "strconv"
@@ -9,6 +10,7 @@ type Metrics struct {
 	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 }
 
+// ConvertGaugeToMetrics преобразовывает Map с метрика Gauge в список Metrics для отправик на сервис Server
 func ConvertGaugeToMetrics(metrics *map[string]string) ([]Metrics, error) {
 	listM := make([]Metrics, 0)
 	for k, v := range *metrics {

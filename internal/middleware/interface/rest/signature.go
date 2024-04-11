@@ -19,10 +19,13 @@ type SignSHA256 struct {
 	isActive bool
 }
 
+// NewSignSHA256 задает ключевую фразу для шифрования cookie согласно SHA256 и формированию подписи cookie
+// если ключевая фраза не задана в настройках, проверка отключается
 func NewSignSHA256(password string) *SignSHA256 {
 	return &SignSHA256{password: []byte(password), isActive: password != ""}
 }
 
+// AddSignToReq добавляет подпись к request
 func (sign *SignSHA256) AddSignToReq(c *resty.Client, r *http.Request) error {
 	if !sign.isActive {
 		return nil
@@ -40,6 +43,7 @@ func (sign *SignSHA256) AddSignToReq(c *resty.Client, r *http.Request) error {
 	return nil
 }
 
+// AddSignToRes добавляет подпись к response
 func (sign *SignSHA256) AddSignToRes(h http.Handler) http.Handler {
 	signFunc := func(w http.ResponseWriter, r *http.Request) {
 		if !sign.isActive {
@@ -55,6 +59,7 @@ func (sign *SignSHA256) AddSignToRes(h http.Handler) http.Handler {
 	return http.HandlerFunc(signFunc)
 }
 
+// CheckSignReq проверяет подпись в request
 func (sign *SignSHA256) CheckSignReq(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !sign.isActive {
