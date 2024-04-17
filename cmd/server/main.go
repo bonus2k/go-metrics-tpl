@@ -4,7 +4,6 @@ package main
 import (
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 	"runtime"
 	"time"
 
@@ -17,12 +16,12 @@ import (
 func main() {
 	runtime.SetCPUProfileRate(0)
 	if err := parseFlags(); err != nil {
-		os.Exit(1)
+		logger.Exit(err, 1)
 	}
 
 	err := logger.Initialize(runLog)
 	if err != nil {
-		os.Exit(1)
+		logger.Exit(err, 1)
 	}
 
 	var storage *repositories.Storage
@@ -30,8 +29,7 @@ func main() {
 	if len(dbConn) != 0 {
 		err := migrations.Start(dbConn)
 		if err != nil {
-			logger.Log.Error("error migration db", err)
-			os.Exit(1)
+			logger.Exit(err, 1)
 		}
 		storage, err = repositories.NewDBStorage(dbConn)
 		if err != nil {
@@ -41,7 +39,7 @@ func main() {
 		storage = repositories.NewMemStorage(storeInterval == 0)
 		memService, err := repositories.NewMemStorageService(storeInterval, fileStore, runRestoreMetrics, storage)
 		if err != nil {
-			os.Exit(1)
+			logger.Exit(err, 1)
 		}
 
 		if storeInterval != 0 {
@@ -68,7 +66,6 @@ func main() {
 	logger.Log.Infof("Running server on %s log level %s", runAddr, runLog)
 	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(storage, signPass))
 	if err != nil {
-		logger.Log.Error("Run server", err)
-		os.Exit(1)
+		logger.Exit(err, 1)
 	}
 }

@@ -15,7 +15,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-const migrationsPath = "file://migrations"
+const migrationsPath = "file://internal/server/migrations/sql"
 
 func Start(connect string) error {
 	dataBase, err := sql.Open("pgx", connect)
@@ -72,7 +72,7 @@ func migrateSQL(db *sql.DB) error {
 		return err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://internal/server/migrations/sql",
+		migrationsPath,
 		"pgx", driver)
 	defer func() {
 		sourceErr, databaseErr := m.Close()

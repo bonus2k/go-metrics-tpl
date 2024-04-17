@@ -4,7 +4,6 @@ package main
 import (
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 	"time"
 
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/services"
@@ -13,12 +12,12 @@ import (
 
 func main() {
 	if err := parseFlags(); err != nil {
-		os.Exit(1)
+		logger.Exit(err, 1)
 	}
 
 	err := logger.Initialize(runLog)
 	if err != nil {
-		os.Exit(1)
+		logger.Exit(err, 1)
 	}
 
 	pollTicker := time.NewTicker(time.Duration(pollInterval) * time.Second)
