@@ -2,20 +2,39 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
 	"time"
 
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/services"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 )
 
+var buildVersion = "N/A"
+var buildDate = "N/A"
+var buildCommit = "N/A"
+
 func main() {
-	if err := parseFlags(); err != nil {
+	_, err := fmt.Fprintf(os.Stdout, "Build version: %s \n", buildVersion)
+	if err != nil {
+		logger.Exit(err, 1)
+	}
+	_, err = fmt.Fprintf(os.Stdout, "Build date: %s \n", buildDate)
+	if err != nil {
+		logger.Exit(err, 1)
+	}
+	_, err = fmt.Fprintf(os.Stdout, "Build commit: %s \n", buildCommit)
+	if err != nil {
 		logger.Exit(err, 1)
 	}
 
-	err := logger.Initialize(runLog)
+	if err = parseFlags(); err != nil {
+		logger.Exit(err, 1)
+	}
+
+	err = logger.Initialize(runLog)
 	if err != nil {
 		logger.Exit(err, 1)
 	}
