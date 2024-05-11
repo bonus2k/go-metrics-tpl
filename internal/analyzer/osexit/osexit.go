@@ -35,13 +35,18 @@ func hasOsExit(x ast.Node) []*ast.CallExpr {
 	ast.Inspect(x, func(node ast.Node) bool {
 		switch y := node.(type) {
 		case *ast.CallExpr:
-			if s, ok := y.Fun.(*ast.SelectorExpr); ok {
-				if i, ok := s.X.(*ast.Ident); ok {
-					if i.Name == "os" && s.Sel.Name == "Exit" {
-						result = append(result, y)
-					}
-				}
+			s, ok := y.Fun.(*ast.SelectorExpr)
+			if !ok {
+				return true
 			}
+			i, ok := s.X.(*ast.Ident)
+			if !ok {
+				return true
+			}
+			if i.Name == "os" && s.Sel.Name == "Exit" {
+				result = append(result, y)
+			}
+			return true
 		}
 		return true
 	})
