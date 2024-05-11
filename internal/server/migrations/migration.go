@@ -1,25 +1,27 @@
+// Package migrations реализует создание таблиц в БД для работы сервиса Server
 package migrations
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/utils"
 	"github.com/golang-migrate/migrate/v4"
 	mpgx "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"go.uber.org/zap"
-	"time"
 )
 
-const migrationsPath = "file://migrations"
+const migrationsPath = "file://internal/server/migrations/sql"
 
 func Start(connect string) error {
 	dataBase, err := sql.Open("pgx", connect)
+
 	if err != nil {
-		logger.Log.Error("can't open connection to db", zap.Error(err))
+		logger.Log.Error("can't open connection to db", err)
 		return fmt.Errorf("can't open connection to db %w", err)
 	}
 
@@ -38,7 +40,7 @@ func Start(connect string) error {
 	}
 	err = utils.RetryAfterError(f)
 	if err != nil {
-		logger.Log.Error("can't connected to db", zap.Error(err))
+		logger.Log.Error("can't connected to db", err)
 		return fmt.Errorf("can't connected to db %w", err)
 	}
 	err = migrateSQL(dataBase)
@@ -60,12 +62,27 @@ func establishConnection(db *sql.DB) error {
 
 func migrateSQL(db *sql.DB) error {
 	driver, err := mpgx.WithInstance(db, &mpgx.Config{})
+	defer func() {
+		err = driver.Close()
+		if err != nil {
+			logger.Log.Error("migrateSQL", err)
+		}
+	}()
 	if err != nil {
 		return err
 	}
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://internal/server/migrations/sql",
+		migrationsPath,
 		"pgx", driver)
+	defer func() {
+		sourceErr, databaseErr := m.Close()
+		if databaseErr != nil {
+			logger.Log.Error("databaseErr", databaseErr)
+		}
+		if sourceErr != nil {
+			logger.Log.Error("sourceErr", sourceErr)
+		}
+	}()
 	if err != nil {
 		return err
 	}

@@ -1,15 +1,17 @@
+// Package services реализует работу worker и сбор метрик
 package services
 
 import (
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
 	"math/rand"
 	"reflect"
 	"runtime"
 	"sync/atomic"
 	"time"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 var memStats runtime.MemStats
@@ -43,16 +45,19 @@ var memStatConst = []string{
 	"TotalAlloc",
 }
 
+// ChanelMetrics канал для получения метрик worker
 type ChanelMetrics struct {
 	outResult chan map[string]string
 	outError  chan error
 }
 
+// NewChanelMetrics создает канал для получения метрик с задданым буфером и каналом для отправки ошибок
 func NewChanelMetrics(sizeBuf int, outError chan error) *ChanelMetrics {
 	out := make(chan map[string]string, sizeBuf)
 	return &ChanelMetrics{outResult: out, outError: outError}
 }
 
+// GetMapMetrics считывает метрики согласно memStatConst и возвращает Map где ключ - имя метрики
 func GetMapMetrics() map[string]string {
 	metrics := make(map[string]string)
 	runtime.ReadMemStats(&memStats)
@@ -66,6 +71,7 @@ func GetMapMetrics() map[string]string {
 	return metrics
 }
 
+// GetGoPSUtilMapMetrics предоставляет метрики по количеству/занятой RAM и утилизации CPU
 func GetGoPSUtilMapMetrics() (map[string]string, error) {
 	metrics := make(map[string]string)
 	vmStat, err := mem.VirtualMemory()
@@ -85,6 +91,7 @@ func GetGoPSUtilMapMetrics() (map[string]string, error) {
 	return metrics, nil
 }
 
+// GetMetrics собирает метрики используя GetMapMetrics и отправляет их worker
 func (ch *ChanelMetrics) GetMetrics(ticker *time.Ticker) {
 	go func() {
 		for range ticker.C {
@@ -94,6 +101,7 @@ func (ch *ChanelMetrics) GetMetrics(ticker *time.Ticker) {
 	}()
 }
 
+// GetPSUtilMetrics собирает метрики используя GetGoPSUtilMapMetric и отправляет их worker
 func (ch *ChanelMetrics) GetPSUtilMetrics(ticker *time.Ticker) {
 	go func() {
 		for range ticker.C {
@@ -108,10 +116,12 @@ func (ch *ChanelMetrics) GetPSUtilMetrics(ticker *time.Ticker) {
 	}()
 }
 
+// GetChanelResult возвращает канал с метриками
 func (ch *ChanelMetrics) GetChanelResult() chan map[string]string {
 	return ch.outResult
 }
 
+// GetPollCount инкрементирует метрику PollCount
 func GetPollCount() func() int64 {
 	var count atomic.Int64
 	return func() int64 {

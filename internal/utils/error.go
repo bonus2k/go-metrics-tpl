@@ -1,3 +1,4 @@
+// Package utils утилитарный пакет
 package utils
 
 import (
@@ -6,6 +7,10 @@ import (
 	"time"
 )
 
+// RetryAfterError повторяет операцию до тех пор, пока она не завершится успешно.
+// Задержка между повторами ограничивается и вычисляется по формуле:
+//
+//	sleep = sleep * attempts
 func RetryAfterError(f func() error) (err error) {
 	attempts := 3
 	sleep := 1 * time.Second

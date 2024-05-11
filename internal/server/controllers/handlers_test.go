@@ -2,17 +2,20 @@ package controllers
 
 import (
 	"context"
-	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCounterPage(t *testing.T) {
 	storage := repositories.NewMemStorage(false)
+	defer repositories.ResetMemStorage()
 	server := httptest.NewServer(MetricsRouter(storage, ""))
 	defer server.Close()
 	type want struct {
@@ -60,7 +63,12 @@ func TestCounterPage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, _ := testRequest(t, server, tt.method, tt.request)
-			defer resp.Body.Close()
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Log.Error("Test", err)
+				}
+			}()
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 		})
@@ -69,6 +77,7 @@ func TestCounterPage(t *testing.T) {
 
 func TestGaugePage(t *testing.T) {
 	storage := repositories.NewMemStorage(false)
+	defer repositories.ResetMemStorage()
 	server := httptest.NewServer(MetricsRouter(storage, ""))
 	defer server.Close()
 	type want struct {
@@ -109,7 +118,12 @@ func TestGaugePage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, _ := testRequest(t, server, tt.method, tt.request)
-			defer resp.Body.Close()
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Log.Error("Test", err)
+				}
+			}()
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 		})
@@ -118,6 +132,7 @@ func TestGaugePage(t *testing.T) {
 
 func TestGetValue(t *testing.T) {
 	storage := *repositories.NewMemStorage(false)
+	defer repositories.ResetMemStorage()
 	server := httptest.NewServer(MetricsRouter(&storage, ""))
 	defer server.Close()
 	type want struct {
@@ -141,7 +156,7 @@ func TestGetValue(t *testing.T) {
 			name:    "test value aCount 200",
 			request: "/value/counter/aCount",
 			method:  http.MethodGet,
-			want:    want{contentType: "text/html", statusCode: 200, body: "1099"},
+			want:    want{contentType: "text/html", statusCode: 200, body: "999"},
 		},
 		{
 			name:    "test value gauge page 404",
@@ -168,7 +183,12 @@ func TestGetValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, body := testRequest(t, server, tt.method, tt.request)
-			defer resp.Body.Close()
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Log.Error("Test", err)
+				}
+			}()
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 			assert.Equal(t, tt.want.body, body)
@@ -178,6 +198,7 @@ func TestGetValue(t *testing.T) {
 
 func TestAllMetrics(t *testing.T) {
 	storage := *repositories.NewMemStorage(false)
+	defer repositories.ResetMemStorage()
 	server := httptest.NewServer(MetricsRouter(&storage, ""))
 	defer server.Close()
 	type want struct {
@@ -195,7 +216,7 @@ func TestAllMetrics(t *testing.T) {
 			name:    "test all metrics 200",
 			request: "/",
 			method:  http.MethodGet,
-			want:    want{contentType: "text/html", statusCode: 200, body: "[{\"Name\":\"aGauge\",\"Value\":\"100\"},{\"Name\":\"aCount\",\"Value\":\"2098\"}]"},
+			want:    want{contentType: "text/html", statusCode: 200, body: "[{\"Name\":\"aGauge\",\"Value\":\"100\"},{\"Name\":\"aCount\",\"Value\":\"999\"}]"},
 		},
 		{
 			name:    "test all metrics 405",
@@ -210,7 +231,12 @@ func TestAllMetrics(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, body := testRequest(t, server, tt.method, tt.request)
-			defer resp.Body.Close()
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Log.Error("Test", err)
+				}
+			}()
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 			assert.Equal(t, tt.want.body, body)
@@ -225,7 +251,12 @@ func testRequest(t *testing.T, ts *httptest.Server, method,
 
 	resp, err := ts.Client().Do(req)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			logger.Log.Error("Test", err)
+		}
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)

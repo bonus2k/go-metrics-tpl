@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 	"strings"
+	sync2 "sync"
+
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
 )
 
 var mem Storage
 var sync bool
+var once sync2.Once
 
 type MemStorageImpl struct {
 	Gauge   map[string]float64
@@ -35,11 +38,17 @@ func (ms *MemStorageImpl) AddMetrics(ctx context.Context, metrics []m.Metrics) e
 }
 
 func NewMemStorage(syncSave bool) *Storage {
-	if mem == nil {
-		sync = syncSave
-		mem = &MemStorageImpl{Gauge: make(map[string]float64), Counter: make(map[string]int64)}
-	}
+	once.Do(
+		func() {
+			sync = syncSave
+			mem = &MemStorageImpl{Gauge: make(map[string]float64), Counter: make(map[string]int64)}
+		},
+	)
 	return &mem
+}
+
+func ResetMemStorage() {
+	mem = &MemStorageImpl{Gauge: make(map[string]float64), Counter: make(map[string]int64)}
 }
 
 func (ms *MemStorageImpl) AddGauge(ctx context.Context, name string, value float64) error {

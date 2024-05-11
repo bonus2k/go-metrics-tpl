@@ -2,13 +2,14 @@ package services
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/clients"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/models"
 	"github.com/go-resty/resty/v2"
-	"net/http"
-	"time"
 )
 
 type PoolWorcker struct {
@@ -18,6 +19,7 @@ type PoolWorcker struct {
 
 var pool *PoolWorcker
 
+// NewPool создает пул worker которые собирают метрики и отправляют их на сервер
 func NewPool(signPass string, connectAddr string) *PoolWorcker {
 	if pool != nil {
 		return pool
@@ -33,12 +35,15 @@ func NewPool(signPass string, connectAddr string) *PoolWorcker {
 		}).
 		SetRetryCount(2).
 		SetRetryWaitTime(1 * time.Second).
-		SetRetryMaxWaitTime(9 * time.Second)
+		SetRetryMaxWaitTime(9 * time.Second).
+		SetCloseConnection(true)
 	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: res}
 	pool = &PoolWorcker{client: client, count: GetPollCount()}
 	return pool
 }
 
+// BatchReport осуществляет сбор метрик и их отправку в сервис Server,
+// в вслучае HTTP ошибки отправялет в канал error сообщение об ошибке
 func (p *PoolWorcker) BatchReport(jobs <-chan map[string]string, errors chan<- error, ticker *time.Ticker, goRoutine int) {
 
 	for range ticker.C {

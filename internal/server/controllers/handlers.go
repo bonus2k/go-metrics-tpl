@@ -1,34 +1,42 @@
+// Package controllers реализует HTTP handler для обработки запросов от сервиса Agent и REST клиентов
 package controllers
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	m "github.com/bonus2k/go-metrics-tpl/internal/models"
-	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
-	"github.com/go-chi/chi/v5"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	m "github.com/bonus2k/go-metrics-tpl/internal/models"
+	"github.com/bonus2k/go-metrics-tpl/internal/server/repositories"
+	"github.com/go-chi/chi/v5"
 )
 
 type controller struct {
 	mem repositories.Storage
 }
 
+// NewController задает параметры для сохранения метрик
 func NewController(mem *repositories.Storage) *controller {
 	return &controller{mem: *mem}
 }
 
+// SaveMetrics реализует сохранение метрик переданных пакетом за одну HTTP сессию (может быть пераданно более одной метрики)
 func (c *controller) SaveMetrics(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	metrics := make([]m.Metrics, 0)
 	dec := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			logger.Log.Error("SaveMetrics", err)
+		}
+	}()
 	if err := dec.Decode(&metrics); err != nil {
-		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
+		logger.Log.Error("cannot decode request JSON body", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -45,36 +53,36 @@ func (c *controller) SaveMetric(w http.ResponseWriter, r *http.Request) {
 	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
 	if err := dec.Decode(&metric); err != nil {
-		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
+		logger.Log.Error("cannot decode request JSON body", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set(m.KeyContentType, m.TypeJSONContent)
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
-		logger.Log.Debug("save", zap.Any("gauge", metric))
+		logger.Log.Debugf("save gauge metric %v", metric)
 		err := c.mem.AddGauge(r.Context(), metric.ID, *metric.Value)
 		if err != nil {
-			logger.Log.Error("can't save gauge", zap.Error(err))
+			logger.Log.Error("can't save gauge", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	case "counter":
-		logger.Log.Debug("save", zap.Any("counter", metric))
+		logger.Log.Debugf("save counter metric %v", metric)
 		err := c.mem.AddCounter(r.Context(), metric.ID, *metric.Delta)
 		if err != nil {
-			logger.Log.Error("can't save counter", zap.Error(err))
+			logger.Log.Error("can't save counter", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	default:
-		logger.Log.Debug("default", zap.Any("metric", metric))
+		logger.Log.Debugf("type of metrics not reconcile %v", metric)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(metric); err != nil {
-		logger.Log.Debug("error encoding response", zap.Error(err))
+		logger.Log.Error("error encoding response", err)
 		return
 	}
 }
@@ -83,13 +91,18 @@ func (c *controller) GetMetric(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	var metric m.Metrics
 	dec := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			logger.Log.Error("GetMetric", err)
+		}
+	}()
 	if err := dec.Decode(&metric); err != nil {
-		logger.Log.Error("cannot decode request JSON body", zap.Error(err))
+		logger.Log.Error("cannot decode request JSON body", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	logger.Log.Info("get metric", zap.Any("metric", metric))
+	logger.Log.Infof("got metric %v", metric)
 	w.Header().Set(m.KeyContentType, m.TypeJSONContent)
 	switch strings.ToLower(metric.MType) {
 	case "gauge":
@@ -112,7 +125,7 @@ func (c *controller) GetMetric(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(metric); err != nil {
-		logger.Log.Debug("error encoding response", zap.Error(err))
+		logger.Log.Error("error encoding response", err)
 		return
 	}
 	logger.Log.Debug("sending HTTP 200 response")
@@ -129,7 +142,7 @@ func (c *controller) CounterPage(w http.ResponseWriter, r *http.Request) {
 	} else {
 		err := c.mem.AddCounter(r.Context(), name, num)
 		if err != nil {
-			logger.Log.Error("can't save counter", zap.Error(err))
+			logger.Log.Error("can't save counter", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -150,7 +163,7 @@ func (c *controller) GaugePage(w http.ResponseWriter, r *http.Request) {
 	}
 	err = c.mem.AddGauge(r.Context(), name, num)
 	if err != nil {
-		logger.Log.Error("can't save gauge", zap.Error(err))
+		logger.Log.Error("can't save gauge", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -168,7 +181,7 @@ func (c *controller) GetValue(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 			_, err := io.WriteString(w, fmt.Sprintf("%v", gauge))
 			if err != nil {
-				logger.Log.Error("[GetValue gauge]", zap.Error(err))
+				logger.Log.Error("[GetValue gauge]", err)
 			}
 		}
 	case "counter":
@@ -178,7 +191,7 @@ func (c *controller) GetValue(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 			_, err := io.WriteString(w, fmt.Sprintf("%v", counter))
 			if err != nil {
-				logger.Log.Error("[GetValue counter]", zap.Error(err))
+				logger.Log.Error("[GetValue counter]", err)
 			}
 		}
 	default:
@@ -196,7 +209,7 @@ func (c *controller) AllMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(m.KeyContentType, m.TypeHTMLContent)
 	_, err = w.Write(marshal)
 	if err != nil {
-		logger.Log.Error("[AllMetrics]", zap.Error(err))
+		logger.Log.Error("[AllMetrics]", err)
 	}
 }
 

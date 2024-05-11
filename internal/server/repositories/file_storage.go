@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
-	"github.com/bonus2k/go-metrics-tpl/internal/utils"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
 	"io/fs"
 	"os"
 	path2 "path"
 	"time"
+
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	"github.com/bonus2k/go-metrics-tpl/internal/utils"
+	"github.com/pkg/errors"
 )
 
 var fileService MemStorageService
@@ -48,7 +48,7 @@ func NewMemStorageService(interval int, path string, restore bool, mem *Storage)
 		if restore {
 			err := ms.loadMem()
 			if err != nil {
-				logger.Log.Error("can't load mem storage", zap.Error(err))
+				logger.Log.Error("can't load mem storage", err)
 			}
 		}
 		fileService = *ms
