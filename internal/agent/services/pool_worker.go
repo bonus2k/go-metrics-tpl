@@ -2,14 +2,12 @@ package services
 
 import (
 	"fmt"
-	"net/http"
+	"sync"
 	"time"
 
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/clients"
-	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"github.com/bonus2k/go-metrics-tpl/internal/models"
-	"github.com/go-resty/resty/v2"
 )
 
 type PoolWorcker struct {
@@ -18,27 +16,13 @@ type PoolWorcker struct {
 }
 
 var pool *PoolWorcker
+var once sync.Once
 
 // NewPool создает пул worker которые собирают метрики и отправляют их на сервер
-func NewPool(signPass string, connectAddr string) *PoolWorcker {
-	if pool != nil {
-		return pool
-	}
-	sha256 := rest.NewSignSHA256(signPass)
-	res := resty.New().
-		SetPreRequestHook(func(client *resty.Client, request *http.Request) error {
-			err := sha256.AddSignToReq(client, request)
-			if err != nil {
-				return err
-			}
-			return rest.GzipReqCompression(client, request)
-		}).
-		SetRetryCount(2).
-		SetRetryWaitTime(1 * time.Second).
-		SetRetryMaxWaitTime(9 * time.Second).
-		SetCloseConnection(true)
-	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: res}
-	pool = &PoolWorcker{client: client, count: GetPollCount()}
+func NewPool(client clients.Connect) *PoolWorcker {
+	once.Do(func() {
+		pool = &PoolWorcker{client: client, count: GetPollCount()}
+	})
 	return pool
 }
 

@@ -16,9 +16,11 @@ var fileStore string
 var runRestoreMetrics bool
 var dbConn string
 var signPass string
+var cryptoKey string
 
 func parseFlags() error {
 	flag.StringVar(&runAddr, "a", "localhost:8080", "address and port to run server")
+	flag.StringVar(&cryptoKey, "crypto-key", "", "file with private key")
 	flag.StringVar(&pprofAddr, "prof", "", "run pprof")
 	flag.StringVar(&runLog, "l", "info", "log level")
 	flag.StringVar(&dbConn, "d", "", "database name and connection information")
@@ -29,6 +31,9 @@ func parseFlags() error {
 	flag.Parse()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		runAddr = envRunAddr
+	}
+	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
+		cryptoKey = envCryptoKey
 	}
 	if envSignPass := os.Getenv("KEY"); envSignPass != "" {
 		signPass = envSignPass

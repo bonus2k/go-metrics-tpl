@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
 	"hash"
 	"io"
 	"net/http"
@@ -72,6 +73,10 @@ func (sign *SignSHA256) CheckSignReq(h http.Handler) http.Handler {
 			return
 		}
 		body, err := io.ReadAll(r.Body)
+		defer func() {
+			err = r.Body.Close()
+			logger.Log.Error("close body", err)
+		}()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
