@@ -83,8 +83,9 @@ func main() {
 	}
 
 	logger.Log.Infof("Running server on %s log level %s", runAddr, runLog)
-	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(storage, signPass))
+	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(storage, signPass, cryptoKey))
 	if err != nil {
 		logger.Exit(err, 1)
 	}
+
 }

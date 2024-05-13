@@ -16,9 +16,11 @@ var pollInterval int
 var runLog string
 var signPass string
 var rateLimitRoutines int
+var cryptoKey string
 
 func parseFlags() error {
 	flag.StringVar(&connectAddr, "a", "localhost:8080", "address and port for connecting to server")
+	flag.StringVar(&cryptoKey, "crypto-key", "", "file with public key")
 	flag.StringVar(&pprofAddr, "prof", "", "run pprof")
 	flag.IntVar(&reportInterval, "r", 10, "timer of report interval for send metrics")
 	flag.IntVar(&rateLimitRoutines, "l", 1, "count of routines")
@@ -29,6 +31,10 @@ func parseFlags() error {
 
 	if envConnectAddr := os.Getenv("ADDRESS"); envConnectAddr != "" {
 		connectAddr = envConnectAddr
+	}
+
+	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
+		cryptoKey = envCryptoKey
 	}
 
 	if envReportInterval := os.Getenv("REPORT_INTERVAL"); envReportInterval != "" {
