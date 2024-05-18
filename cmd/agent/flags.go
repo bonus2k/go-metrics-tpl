@@ -24,10 +24,10 @@ var cryptoKey string
 var configFile string
 
 type config struct {
-	Address        string `json:"address", omitempty`
-	ReportInterval string `json:"report_interval", omitempty`
-	PollInterval   string `json:"poll_interval", omitempty`
-	Crypto_key     string `json:"crypto_key", omitempty`
+	Address        string `json:"address,omitempty""`
+	ReportInterval string `json:"report_interval,omitempty"`
+	PollInterval   string `json:"poll_interval,omitempty""`
+	CryptoKey      string `json:"crypto_key,omitempty"`
 }
 
 var defaultReportInterval = time.Second * 10
@@ -75,7 +75,7 @@ func parseEnv() error {
 	if envCryptoKey, ok := os.LookupEnv("CRYPTO_KEY"); ok {
 		cryptoKey = envCryptoKey
 	} else if cryptoKey == "" {
-		cryptoKey = conf.Crypto_key
+		cryptoKey = conf.CryptoKey
 	}
 
 	if envReportInterval, ok := os.LookupEnv("REPORT_INTERVAL"); ok {

@@ -24,12 +24,12 @@ var cryptoKey string
 var configFile string
 
 type config struct {
-	Address        string `json:"address", omitempty`
-	Restore        bool   `json:"restore", omitempty`
-	Store_interval string `json:"store_interval", omitempty`
-	Store_file     string `json:"store_file", omitempty`
-	Database_dsn   string `json:"database_dsn", omitempty`
-	Crypto_key     string `json:"crypto_key", omitempty`
+	Address       string `json:"address,omitempty"`
+	Restore       bool   `json:"restore,omitempty"`
+	StoreInterval string `json:"store_interval,omitempty"`
+	StoreFile     string `json:"store_file,omitempty"`
+	DatabaseDsn   string `json:"database_dsn,omitempty"`
+	CryptoKey     string `json:"crypto_key,omitempty"`
 }
 
 var defaultStoreInterval = time.Minute * 5
@@ -77,7 +77,7 @@ func parseEnv() error {
 	if envCryptoKey, ok := os.LookupEnv("CRYPTO_KEY"); ok {
 		cryptoKey = envCryptoKey
 	} else if cryptoKey == "" {
-		cryptoKey = conf.Crypto_key
+		cryptoKey = conf.CryptoKey
 	}
 
 	if envStoreInterval, ok := os.LookupEnv("STORE_INTERVAL"); ok {
@@ -87,7 +87,7 @@ func parseEnv() error {
 		}
 		storeInterval = s
 	} else if storeInterval == defaultStoreInterval {
-		s, err := time.ParseDuration(conf.Store_interval)
+		s, err := time.ParseDuration(conf.StoreInterval)
 		if err != nil {
 			return errors.Wrap(err, "store_interval is not correct")
 		}
@@ -97,7 +97,7 @@ func parseEnv() error {
 	if envFileStore, ok := os.LookupEnv("STORE_FILE"); ok {
 		fileStore = envFileStore
 	} else if fileStore == "" {
-		fileStore = conf.Store_file
+		fileStore = conf.StoreFile
 	}
 
 	if envRunRestoreMetrics, ok := os.LookupEnv("RESTORE"); ok {
@@ -113,7 +113,7 @@ func parseEnv() error {
 	if envDBConn, ok := os.LookupEnv("DATABASE_DSN"); ok {
 		dbConn = envDBConn
 	} else if dbConn == "" {
-		dbConn = conf.Database_dsn
+		dbConn = conf.DatabaseDsn
 	}
 
 	if envPprofAdr, ok := os.LookupEnv("PPROF_ADDRESS"); ok {
