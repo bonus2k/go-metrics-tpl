@@ -97,7 +97,12 @@ func MiddlewareLog(h http.Handler) http.Handler {
 			responseData:   &responseData{status: 0, size: 0},
 			body:           buf,
 		}
-
+		defer func() {
+			err := r.Body.Close()
+			if err != nil {
+				Log.logger.Error().Err(err).Msg("")
+			}
+		}()
 		h.ServeHTTP(lw, r)
 		duration := time.Since(start)
 		Log.logger.Info().
