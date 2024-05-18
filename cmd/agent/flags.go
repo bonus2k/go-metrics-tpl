@@ -24,9 +24,9 @@ var cryptoKey string
 var configFile string
 
 type config struct {
-	Address        string `json:"address,omitempty""`
+	Address        string `json:"address,omitempty"`
 	ReportInterval string `json:"report_interval,omitempty"`
-	PollInterval   string `json:"poll_interval,omitempty""`
+	PollInterval   string `json:"poll_interval,omitempty"`
 	CryptoKey      string `json:"crypto_key,omitempty"`
 }
 
