@@ -17,14 +17,14 @@ import (
 var fileService MemStorageService
 
 type MemStorageService struct {
-	interval int
+	interval time.Duration
 	lastSave time.Time
 	file     *os.File
 	encoder  *json.Encoder
 	mem      *Storage
 }
 
-func NewMemStorageService(interval int, path string, restore bool, mem *Storage) (*MemStorageService, error) {
+func NewMemStorageService(interval time.Duration, path string, restore bool, mem *Storage) (*MemStorageService, error) {
 	if fileService.file == nil {
 		dir, _ := path2.Split(path)
 
@@ -57,7 +57,7 @@ func NewMemStorageService(interval int, path string, restore bool, mem *Storage)
 }
 
 func (ms MemStorageService) Save() error {
-	run := ms.lastSave.Add(time.Duration(ms.interval) * time.Second)
+	run := ms.lastSave.Add(ms.interval)
 	metrics, err := mem.GetAllMetrics(context.TODO())
 	if err != nil {
 		return err

@@ -42,7 +42,7 @@ func main() {
 		logger.Exit(err, 1)
 	}
 
-	pollTicker := time.NewTicker(time.Duration(pollInterval) * time.Second)
+	pollTicker := time.NewTicker(pollInterval)
 	buf := getSizeBuf(reportInterval, pollInterval)
 	resultErr := make(chan error)
 	chanelMetrics := services.NewChanelMetrics(buf, resultErr)
@@ -81,7 +81,7 @@ func main() {
 	pool := services.NewPool(client)
 	for i := 0; i < rateLimitRoutines; i++ {
 		num := i
-		reportTicker := time.NewTicker(time.Duration(reportInterval) * time.Second)
+		reportTicker := time.NewTicker(reportInterval)
 		go func() {
 			pool.BatchReport(chanelResult, resultErr, reportTicker, num)
 		}()
@@ -102,10 +102,10 @@ func main() {
 	}
 }
 
-func getSizeBuf(reportInterval int, pollInterval int) int {
-	i := reportInterval / pollInterval
+func getSizeBuf(reportInterval time.Duration, pollInterval time.Duration) int {
+	i := reportInterval.Seconds() / pollInterval.Seconds()
 	if i < 1 {
 		i = 1
 	}
-	return i * 2
+	return int(i * 2)
 }
