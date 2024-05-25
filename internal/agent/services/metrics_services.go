@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"reflect"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -47,8 +48,10 @@ var memStatConst = []string{
 
 // ChanelMetrics канал для получения метрик worker
 type ChanelMetrics struct {
-	outResult chan map[string]string
-	outError  chan error
+	outResult    chan map[string]string
+	outError     chan error
+	metricsGroup sync.WaitGroup
+	shutDown     bool
 }
 
 // NewChanelMetrics создает канал для получения метрик с задданым буфером и каналом для отправки ошибок
@@ -93,32 +96,55 @@ func GetGoPSUtilMapMetrics() (map[string]string, error) {
 
 // GetMetrics собирает метрики используя GetMapMetrics и отправляет их worker
 func (ch *ChanelMetrics) GetMetrics(ticker *time.Ticker) {
+	ch.metricsGroup.Add(1)
 	go func() {
+	out:
 		for range ticker.C {
-			ch.outResult <- GetMapMetrics()
-			logger.Log.Info("send metrics to out chan")
+			if !ch.shutDown {
+				ch.outResult <- GetMapMetrics()
+				logger.Log.Info("send metrics to out chan")
+			} else {
+				ch.outResult <- nil
+				ch.metricsGroup.Done()
+				break out
+			}
 		}
+		logger.Log.Info("Metrics shutdown")
 	}()
 }
 
 // GetPSUtilMetrics собирает метрики используя GetGoPSUtilMapMetric и отправляет их worker
 func (ch *ChanelMetrics) GetPSUtilMetrics(ticker *time.Ticker) {
+	ch.metricsGroup.Add(1)
 	go func() {
+	out:
 		for range ticker.C {
-			metrics, err := GetGoPSUtilMapMetrics()
-			if err != nil {
-				ch.outError <- fmt.Errorf("can't get PSUtil metrics, %w", err)
-				continue
+			if !ch.shutDown {
+				metrics, err := GetGoPSUtilMapMetrics()
+				if err != nil {
+					ch.outError <- fmt.Errorf("can't get PSUtil metrics, %w", err)
+					continue
+				}
+				ch.outResult <- metrics
+				logger.Log.Info("send PSUtil metrics to out chan")
+			} else {
+				ch.outResult <- nil
+				ch.metricsGroup.Done()
+				break out
 			}
-			ch.outResult <- metrics
-			logger.Log.Info("send PSUtil metrics to out chan")
 		}
+		logger.Log.Info("PSUtilMetrics shutdown")
 	}()
 }
 
 // GetChanelResult возвращает канал с метриками
 func (ch *ChanelMetrics) GetChanelResult() chan map[string]string {
 	return ch.outResult
+}
+
+func (ch *ChanelMetrics) Shutdown() {
+	ch.shutDown = true
+	ch.metricsGroup.Wait()
 }
 
 // GetPollCount инкрементирует метрику PollCount

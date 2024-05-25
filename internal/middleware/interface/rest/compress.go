@@ -42,12 +42,6 @@ func GzipReqCompression(c *resty.Client, r *http.Request) error {
 	}
 
 	gzipw, err := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-	defer func() {
-		err = gzipw.Close()
-		if err != nil {
-			logger.Log.Error("GzipReqCompression", err)
-		}
-	}()
 	if err != nil {
 		return errors.Wrap(err, "level compression is invalid")
 	}
@@ -57,10 +51,14 @@ func GzipReqCompression(c *resty.Client, r *http.Request) error {
 		return errors.Wrap(err, "can't write in body")
 	}
 
+	err = gzipw.Close()
+	if err != nil {
+		logger.Log.Error("GzipReqCompression", err)
+	}
+
 	r.ContentLength = int64(buf.Len())
 	r.Body = io.NopCloser(bytes.NewReader(buf.Bytes()))
 	r.Header.Add(m.KeyContentEncoding, m.TypeEncodingContent)
-
 	return nil
 }
 
@@ -113,7 +111,7 @@ func GzipReqDecompression1(h http.Handler) http.Handler {
 			defer func() {
 				err = gz.Close()
 				if err != nil {
-					logger.Log.Error("GzipReqDecompression", err)
+					logger.Log.Error("GzipReqDecompression close gzip", err)
 				}
 			}()
 			r.Body = gz

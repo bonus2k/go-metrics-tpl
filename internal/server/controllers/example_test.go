@@ -66,7 +66,7 @@ var sendRequest = getMetric()
 
 func saveMetric(url string) int {
 	storage := *repositories.NewMemStorage(false)
-	server := httptest.NewServer(MetricsRouter(&storage, ""))
+	server := httptest.NewServer(MetricsRouter(&storage, "", ""))
 	defer server.Close()
 	req, err := http.NewRequest(http.MethodPost, server.URL+url, nil)
 	if err != nil {
@@ -92,7 +92,7 @@ func getMetric() func(url string) (int, []byte) {
 	storage.AddGauge(context.TODO(), "aGauge", 100)
 	storage.AddCounter(context.TODO(), "aCount", 99)
 	return func(url string) (int, []byte) {
-		server := httptest.NewServer(MetricsRouter(&storage, ""))
+		server := httptest.NewServer(MetricsRouter(&storage, "", ""))
 		defer server.Close()
 		req, err := http.NewRequest(http.MethodGet, server.URL+url, nil)
 		if err != nil {
