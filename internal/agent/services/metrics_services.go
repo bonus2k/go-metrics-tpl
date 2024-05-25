@@ -96,8 +96,8 @@ func GetGoPSUtilMapMetrics() (map[string]string, error) {
 
 // GetMetrics собирает метрики используя GetMapMetrics и отправляет их worker
 func (ch *ChanelMetrics) GetMetrics(ticker *time.Ticker) {
+	ch.metricsGroup.Add(1)
 	go func() {
-		ch.metricsGroup.Add(1)
 	out:
 		for range ticker.C {
 			if !ch.shutDown {
@@ -115,8 +115,8 @@ func (ch *ChanelMetrics) GetMetrics(ticker *time.Ticker) {
 
 // GetPSUtilMetrics собирает метрики используя GetGoPSUtilMapMetric и отправляет их worker
 func (ch *ChanelMetrics) GetPSUtilMetrics(ticker *time.Ticker) {
+	ch.metricsGroup.Add(1)
 	go func() {
-		ch.metricsGroup.Add(1)
 	out:
 		for range ticker.C {
 			if !ch.shutDown {
