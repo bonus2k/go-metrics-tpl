@@ -9,6 +9,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/services"
@@ -20,6 +22,7 @@ var buildDate = "N/A"
 var buildCommit = "N/A"
 
 func main() {
+	idleConnsClosed := make(chan struct{})
 	_, err := fmt.Fprintf(os.Stdout, "Build version: %s \n", buildVersion)
 	if err != nil {
 		logger.Exit(err, 1)
@@ -79,13 +82,26 @@ func main() {
 	client := clients.Connect{Server: connectAddr, Protocol: "http", Client: res}
 
 	pool := services.NewPool(client)
+	reportTicker := time.NewTicker(reportInterval)
 	for i := 0; i < rateLimitRoutines; i++ {
 		num := i
-		reportTicker := time.NewTicker(reportInterval)
 		go func() {
 			pool.BatchReport(chanelResult, resultErr, reportTicker, num)
 		}()
 	}
+
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigint
+		chanelMetrics.Shutdown()
+		pool.Shutdown()
+		pollTicker.Stop()
+		reportTicker.Stop()
+		close(chanelResult)
+		close(resultErr)
+		close(idleConnsClosed)
+	}()
 
 	if len(pprofAddr) != 0 {
 		go func() {
@@ -100,6 +116,9 @@ func main() {
 	for err := range resultErr {
 		logger.Log.Error("Error poll worker send batch metrics", err)
 	}
+
+	<-idleConnsClosed
+	fmt.Println("agent shutdown gracefully")
 }
 
 func getSizeBuf(reportInterval time.Duration, pollInterval time.Duration) int {
