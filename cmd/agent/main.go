@@ -53,7 +53,7 @@ func main() {
 	chanelMetrics.GetMetrics(pollTicker)
 	chanelMetrics.GetPSUtilMetrics(pollTicker)
 	chanelResult := chanelMetrics.GetChanelResult()
-	ip, err := getOutboundIP(connectAddr)
+	ip, _ := getOutboundIP(connectAddr)
 	sha256 := rest.NewSignSHA256(signPass)
 	crypto, err := rest.NewEncrypt(cryptoKey)
 	if err != nil {
