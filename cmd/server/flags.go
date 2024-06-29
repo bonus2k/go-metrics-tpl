@@ -22,6 +22,7 @@ var dbConn string
 var signPass string
 var cryptoKey string
 var configFile string
+var trsSubnet string
 
 type config struct {
 	Address       string `json:"address,omitempty"`
@@ -30,12 +31,14 @@ type config struct {
 	StoreFile     string `json:"store_file,omitempty"`
 	DatabaseDsn   string `json:"database_dsn,omitempty"`
 	CryptoKey     string `json:"crypto_key,omitempty"`
+	TrustedSubnet string `json:"trusted_subnet,omitempty"`
 }
 
 var defaultStoreInterval = time.Minute * 5
 
 func parseFlags() error {
 	flag.StringVar(&runAddr, "a", "localhost:8080", "address and port to run server")
+	flag.StringVar(&trsSubnet, "t", "", "trusted subnet")
 	flag.StringVar(&configFile, "c", "", "path to config file")
 	flag.StringVar(&cryptoKey, "crypto-key", "", "file with private key")
 	flag.StringVar(&pprofAddr, "prof", "", "run pprof")
@@ -44,7 +47,7 @@ func parseFlags() error {
 	flag.StringVar(&signPass, "k", "", "signature for HashSHA256")
 	flag.DurationVar(&storeInterval, "i", defaultStoreInterval, "metrics saving interval")
 	flag.StringVar(&fileStore, "f", "/tmp/metrics-db.json", "file path for saving metrics")
-	flag.BoolVar(&runRestoreMetrics, "r", true, "restore metrics")
+	flag.BoolVar(&runRestoreMetrics, "r", false, "restore metrics")
 	flag.Parse()
 
 	if err := parseEnv(); err != nil {
@@ -72,6 +75,12 @@ func parseEnv() error {
 		runAddr = envRunAddr
 	} else if runAddr == "" {
 		runAddr = conf.Address
+	}
+
+	if envTrsSubnet, ok := os.LookupEnv("TRUSTED_SUBNET"); ok {
+		trsSubnet = envTrsSubnet
+	} else if trsSubnet == "" {
+		trsSubnet = conf.TrustedSubnet
 	}
 
 	if envCryptoKey, ok := os.LookupEnv("CRYPTO_KEY"); ok {

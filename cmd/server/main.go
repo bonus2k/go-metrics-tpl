@@ -87,7 +87,7 @@ func main() {
 		}()
 	}
 
-	var srv = http.Server{Addr: runAddr, Handler: controllers.MetricsRouter(storage, signPass, cryptoKey)}
+	var srv = http.Server{Addr: runAddr, Handler: controllers.MetricsRouter(storage, signPass, cryptoKey, trsSubnet)}
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
 	go func() {

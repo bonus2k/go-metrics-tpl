@@ -6,6 +6,7 @@ import (
 	"github.com/bonus2k/go-metrics-tpl/internal/agent/clients"
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/interface/rest"
 	"github.com/go-resty/resty/v2"
+	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -52,7 +53,7 @@ func main() {
 	chanelMetrics.GetMetrics(pollTicker)
 	chanelMetrics.GetPSUtilMetrics(pollTicker)
 	chanelResult := chanelMetrics.GetChanelResult()
-
+	ip, err := getOutboundIP(connectAddr)
 	sha256 := rest.NewSignSHA256(signPass)
 	crypto, err := rest.NewEncrypt(cryptoKey)
 	if err != nil {
@@ -65,6 +66,10 @@ func main() {
 				return err
 			}
 			err = sha256.AddSignToReq(client, request)
+			if err != nil {
+				return err
+			}
+			err = rest.AddRealIp(client, request, ip)
 			if err != nil {
 				return err
 			}
@@ -127,4 +132,16 @@ func getSizeBuf(reportInterval time.Duration, pollInterval time.Duration) int {
 		i = 1
 	}
 	return int(i * 2)
+}
+
+func getOutboundIP(address string) (string, error) {
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.TCPAddr)
+	logger.Log.Info(localAddr.String())
+	return localAddr.IP.String(), nil
 }

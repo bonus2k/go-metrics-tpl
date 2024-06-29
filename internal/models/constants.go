@@ -10,4 +10,5 @@ const (
 	TypeEncryptContent  = "crypto/rsa"
 	TypeHTMLContent     = "text/html"
 	KeyHashSHA256       = "HashSHA256"
+	KeyXRealIP          = "X-Real-IP"
 )
