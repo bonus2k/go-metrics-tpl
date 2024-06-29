@@ -16,7 +16,7 @@ import (
 func TestCounterPage(t *testing.T) {
 	storage := repositories.NewMemStorage(false)
 	defer repositories.ResetMemStorage()
-	server := httptest.NewServer(MetricsRouter(storage, ""))
+	server := httptest.NewServer(MetricsRouter(storage, "", "", ""))
 	defer server.Close()
 	type want struct {
 		contentType string
@@ -78,7 +78,7 @@ func TestCounterPage(t *testing.T) {
 func TestGaugePage(t *testing.T) {
 	storage := repositories.NewMemStorage(false)
 	defer repositories.ResetMemStorage()
-	server := httptest.NewServer(MetricsRouter(storage, ""))
+	server := httptest.NewServer(MetricsRouter(storage, "", "", ""))
 	defer server.Close()
 	type want struct {
 		contentType string
@@ -133,7 +133,7 @@ func TestGaugePage(t *testing.T) {
 func TestGetValue(t *testing.T) {
 	storage := *repositories.NewMemStorage(false)
 	defer repositories.ResetMemStorage()
-	server := httptest.NewServer(MetricsRouter(&storage, ""))
+	server := httptest.NewServer(MetricsRouter(&storage, "", "", ""))
 	defer server.Close()
 	type want struct {
 		contentType string
@@ -199,7 +199,7 @@ func TestGetValue(t *testing.T) {
 func TestAllMetrics(t *testing.T) {
 	storage := *repositories.NewMemStorage(false)
 	defer repositories.ResetMemStorage()
-	server := httptest.NewServer(MetricsRouter(&storage, ""))
+	server := httptest.NewServer(MetricsRouter(&storage, "", "", ""))
 	defer server.Close()
 	type want struct {
 		contentType string

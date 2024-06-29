@@ -2,11 +2,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
@@ -20,6 +24,7 @@ var buildDate = "N/A"
 var buildCommit = "N/A"
 
 func main() {
+	idleConnsClosed := make(chan struct{})
 	_, err := fmt.Fprintf(os.Stdout, "Build version: %s \n", buildVersion)
 	if err != nil {
 		logger.Exit(err, 1)
@@ -82,9 +87,21 @@ func main() {
 		}()
 	}
 
+	var srv = http.Server{Addr: runAddr, Handler: controllers.MetricsRouter(storage, signPass, cryptoKey, trsSubnet)}
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigint
+		err = srv.Shutdown(context.Background())
+		close(idleConnsClosed)
+	}()
+
 	logger.Log.Infof("Running server on %s log level %s", runAddr, runLog)
-	err = http.ListenAndServe(runAddr, controllers.MetricsRouter(storage, signPass))
-	if err != nil {
+	err = srv.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Exit(err, 1)
 	}
+
+	<-idleConnsClosed
+	logger.Log.Info("server shutdown gracefully")
 }

@@ -10,16 +10,23 @@ import (
 )
 
 // MetricsRouter создает роутер для HTTP сервера
-func MetricsRouter(mem *repositories.Storage, pass string) chi.Router {
+func MetricsRouter(mem *repositories.Storage, pass string, file string, trustNet string) chi.Router {
 	ctrl := NewController(mem)
 	router := chi.NewRouter()
 	sha256 := rest.NewSignSHA256(pass)
+	decrypt, err := rest.NewDecrypt(file)
+	subnet := rest.NewTrustSubnet(trustNet)
+	if err != nil {
+		logger.Exit(err, 1)
+	}
 	router.Use(
+		subnet.CheckRealIp,
 		rest.GzipReqDecompression1,
 		rest.GzipResCompression,
 		logger.MiddlewareLog,
 		sha256.AddSignToRes,
 		sha256.CheckSignReq,
+		decrypt.DecryptRequest,
 	)
 	router.Route("/update", func(r chi.Router) {
 		r.Post("/gauge/{name}/{value}", ctrl.GaugePage)

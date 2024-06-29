@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	"github.com/bonus2k/go-metrics-tpl/internal/middleware/logger"
+	"io"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -11,51 +15,147 @@ import (
 var runAddr string
 var pprofAddr string
 var runLog string
-var storeInterval int
+var storeInterval time.Duration
 var fileStore string
 var runRestoreMetrics bool
 var dbConn string
 var signPass string
+var cryptoKey string
+var configFile string
+var trsSubnet string
+
+type config struct {
+	Address       string `json:"address,omitempty"`
+	Restore       bool   `json:"restore,omitempty"`
+	StoreInterval string `json:"store_interval,omitempty"`
+	StoreFile     string `json:"store_file,omitempty"`
+	DatabaseDsn   string `json:"database_dsn,omitempty"`
+	CryptoKey     string `json:"crypto_key,omitempty"`
+	TrustedSubnet string `json:"trusted_subnet,omitempty"`
+}
+
+var defaultStoreInterval = time.Minute * 5
 
 func parseFlags() error {
 	flag.StringVar(&runAddr, "a", "localhost:8080", "address and port to run server")
+	flag.StringVar(&trsSubnet, "t", "", "trusted subnet")
+	flag.StringVar(&configFile, "c", "", "path to config file")
+	flag.StringVar(&cryptoKey, "crypto-key", "", "file with private key")
 	flag.StringVar(&pprofAddr, "prof", "", "run pprof")
 	flag.StringVar(&runLog, "l", "info", "log level")
 	flag.StringVar(&dbConn, "d", "", "database name and connection information")
 	flag.StringVar(&signPass, "k", "", "signature for HashSHA256")
-	flag.IntVar(&storeInterval, "i", 300, "metrics saving interval")
+	flag.DurationVar(&storeInterval, "i", defaultStoreInterval, "metrics saving interval")
 	flag.StringVar(&fileStore, "f", "/tmp/metrics-db.json", "file path for saving metrics")
-	flag.BoolVar(&runRestoreMetrics, "r", true, "restore metrics")
+	flag.BoolVar(&runRestoreMetrics, "r", false, "restore metrics")
 	flag.Parse()
-	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
+
+	if err := parseEnv(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func parseEnv() error {
+
+	if envConfigFile, ok := os.LookupEnv("CONFIG"); ok {
+		configFile = envConfigFile
+	}
+
+	var conf config
+	if configFile != "" {
+		err := parseConfig(&conf)
+		if err != nil {
+			return err
+		}
+	}
+
+	if envRunAddr, ok := os.LookupEnv("ADDRESS"); ok {
 		runAddr = envRunAddr
+	} else if runAddr == "" {
+		runAddr = conf.Address
 	}
-	if envSignPass := os.Getenv("KEY"); envSignPass != "" {
-		signPass = envSignPass
+
+	if envTrsSubnet, ok := os.LookupEnv("TRUSTED_SUBNET"); ok {
+		trsSubnet = envTrsSubnet
+	} else if trsSubnet == "" {
+		trsSubnet = conf.TrustedSubnet
 	}
-	if envStoreInterval := os.Getenv("STORE_INTERVAL"); envStoreInterval != "" {
-		s, err := strconv.Atoi(envStoreInterval)
+
+	if envCryptoKey, ok := os.LookupEnv("CRYPTO_KEY"); ok {
+		cryptoKey = envCryptoKey
+	} else if cryptoKey == "" {
+		cryptoKey = conf.CryptoKey
+	}
+
+	if envStoreInterval, ok := os.LookupEnv("STORE_INTERVAL"); ok {
+		s, err := time.ParseDuration(envStoreInterval)
 		if err != nil {
 			return errors.Wrap(err, "STORE_INTERVAL is not correct")
 		}
 		storeInterval = s
+	} else if storeInterval == defaultStoreInterval {
+		s, err := time.ParseDuration(conf.StoreInterval)
+		if err != nil {
+			return errors.Wrap(err, "store_interval is not correct")
+		}
+		storeInterval = s
 	}
-	if envFileStore := os.Getenv("FILE_STORAGE_PATH"); envFileStore != "" {
+
+	if envFileStore, ok := os.LookupEnv("STORE_FILE"); ok {
 		fileStore = envFileStore
+	} else if fileStore == "" {
+		fileStore = conf.StoreFile
 	}
-	if envRunRestoreMetrics := os.Getenv("RESTORE"); envRunRestoreMetrics != "" {
+
+	if envRunRestoreMetrics, ok := os.LookupEnv("RESTORE"); ok {
 		b, err := strconv.ParseBool(envRunRestoreMetrics)
 		if err != nil {
 			return errors.Wrap(err, "RESTORE is not correct")
 		}
 		runRestoreMetrics = b
-	}
-	if envDBConn := os.Getenv("DATABASE_DSN"); envDBConn != "" {
-		dbConn = envDBConn
+	} else if !runRestoreMetrics {
+		runRestoreMetrics = conf.Restore
 	}
 
-	if envPprofAdr := os.Getenv("PPROF_ADDRESS"); envPprofAdr != "" {
+	if envDBConn, ok := os.LookupEnv("DATABASE_DSN"); ok {
+		dbConn = envDBConn
+	} else if dbConn == "" {
+		dbConn = conf.DatabaseDsn
+	}
+
+	if envPprofAdr, ok := os.LookupEnv("PPROF_ADDRESS"); ok {
 		pprofAddr = envPprofAdr
+	}
+
+	if envSignPass, ok := os.LookupEnv("KEY"); ok {
+		signPass = envSignPass
+	}
+
+	return nil
+}
+
+func parseConfig(conf *config) error {
+	file, err := os.Open(configFile)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			logger.Log.Error("close file failed", err)
+		}
+	}()
+
+	buf, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(buf, conf)
+	if err != nil {
+		return err
 	}
 
 	return nil

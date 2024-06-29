@@ -1,0 +1,9 @@
+{
+  "address": "localhost:8080",
+  "restore": false,
+  "store_interval": "1s",
+  "store_file": "/tmp/file.db",
+  "database_dsn": "",
+  "crypto_key": "private.pem",
+  "trusted_subnet": "127.0.1.0/24"
+}
